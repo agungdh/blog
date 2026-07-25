@@ -20,7 +20,7 @@ func NewSSR(svc *service.PostService, tmpl *template.Template) *SSRHandler {
 }
 
 func (h *SSRHandler) Home(w http.ResponseWriter, r *http.Request) {
-	posts, err := h.svc.GetAllPosts()
+	posts, err := h.svc.GetAllPosts(r.Context())
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -41,7 +41,7 @@ func (h *SSRHandler) Home(w http.ResponseWriter, r *http.Request) {
 func (h *SSRHandler) Post(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 
-	post, err := h.svc.GetPostBySlug(slug)
+	post, err := h.svc.GetPostBySlug(r.Context(), slug)
 	if err != nil {
 		http.NotFound(w, r)
 		return
@@ -70,13 +70,13 @@ func (h *SSRHandler) Post(w http.ResponseWriter, r *http.Request) {
 func (h *SSRHandler) Category(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 
-	category, err := h.svc.GetCategoryBySlug(slug)
+	category, err := h.svc.GetCategoryBySlug(r.Context(), slug)
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
 
-	posts, err := h.svc.GetPostsByCategorySlug(slug)
+	posts, err := h.svc.GetPostsByCategorySlug(r.Context(), slug)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -98,13 +98,13 @@ func (h *SSRHandler) Category(w http.ResponseWriter, r *http.Request) {
 func (h *SSRHandler) Tag(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 
-	tag, err := h.svc.GetTagBySlug(slug)
+	tag, err := h.svc.GetTagBySlug(r.Context(), slug)
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
 
-	posts, err := h.svc.GetPostsByTagSlug(slug)
+	posts, err := h.svc.GetPostsByTagSlug(r.Context(), slug)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return

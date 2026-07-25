@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"context"
 	"strings"
 
 	"github.com/yuin/goldmark"
@@ -22,8 +23,8 @@ func New(s *store.Store) *PostService {
 	}
 }
 
-func (s *PostService) GetAllPosts() ([]model.Post, error) {
-	posts, err := s.store.GetAllPosts()
+func (s *PostService) GetAllPosts(ctx context.Context) ([]model.Post, error) {
+	posts, err := s.store.GetAllPosts(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -33,12 +34,8 @@ func (s *PostService) GetAllPosts() ([]model.Post, error) {
 	return posts, nil
 }
 
-func (s *PostService) GetPostBySlug(slug string) (*model.Post, error) {
-	post, err := s.store.GetPostBySlug(slug)
-	if err != nil {
-		return nil, err
-	}
-	return post, nil
+func (s *PostService) GetPostBySlug(ctx context.Context, slug string) (*model.Post, error) {
+	return s.store.GetPostBySlug(ctx, slug)
 }
 
 func (s *PostService) RenderMarkdown(input string) (string, error) {
@@ -49,20 +46,20 @@ func (s *PostService) RenderMarkdown(input string) (string, error) {
 	return buf.String(), nil
 }
 
-func (s *PostService) CreatePost(p *model.Post) error {
-	return s.store.CreatePost(p)
+func (s *PostService) CreatePost(ctx context.Context, p *model.Post) error {
+	return s.store.CreatePost(ctx, p)
 }
 
-func (s *PostService) UpdatePost(p *model.Post) error {
-	return s.store.UpdatePost(p)
+func (s *PostService) UpdatePost(ctx context.Context, p *model.Post) error {
+	return s.store.UpdatePost(ctx, p)
 }
 
-func (s *PostService) DeletePost(slug string) error {
-	return s.store.DeletePost(slug)
+func (s *PostService) DeletePost(ctx context.Context, slug string) error {
+	return s.store.DeletePost(ctx, slug)
 }
 
-func (s *PostService) GetPostsByCategorySlug(slug string) ([]model.Post, error) {
-	posts, err := s.store.GetPostsByCategorySlug(slug)
+func (s *PostService) GetPostsByCategorySlug(ctx context.Context, slug string) ([]model.Post, error) {
+	posts, err := s.store.GetPostsByCategorySlug(ctx, slug)
 	if err != nil {
 		return nil, err
 	}
@@ -72,8 +69,8 @@ func (s *PostService) GetPostsByCategorySlug(slug string) ([]model.Post, error) 
 	return posts, nil
 }
 
-func (s *PostService) GetPostsByTagSlug(slug string) ([]model.Post, error) {
-	posts, err := s.store.GetPostsByTagSlug(slug)
+func (s *PostService) GetPostsByTagSlug(ctx context.Context, slug string) ([]model.Post, error) {
+	posts, err := s.store.GetPostsByTagSlug(ctx, slug)
 	if err != nil {
 		return nil, err
 	}
@@ -83,12 +80,12 @@ func (s *PostService) GetPostsByTagSlug(slug string) ([]model.Post, error) {
 	return posts, nil
 }
 
-func (s *PostService) GetCategoryBySlug(slug string) (*model.Category, error) {
-	return s.store.GetCategoryBySlug(slug)
+func (s *PostService) GetCategoryBySlug(ctx context.Context, slug string) (*model.Category, error) {
+	return s.store.GetCategoryBySlug(ctx, slug)
 }
 
-func (s *PostService) GetTagBySlug(slug string) (*model.Tag, error) {
-	return s.store.GetTagBySlug(slug)
+func (s *PostService) GetTagBySlug(ctx context.Context, slug string) (*model.Tag, error) {
+	return s.store.GetTagBySlug(ctx, slug)
 }
 
 func (s *PostService) generateSummary(markdown string) string {
