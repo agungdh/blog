@@ -1,0 +1,12 @@
+{{template "head" .}}
+<h1 class="page-title">Posts</h1>
+{{range .Posts}}
+<article class="post-card">
+    <h2><a href="/posts/{{.Slug}}">{{.Title}}</a></h2>
+    <time datetime="{{.Date}}">{{.Date}}</time>
+    <p class="post-summary">{{.Summary}}</p>
+</article>
+{{else}}
+<p class="empty">No posts yet.</p>
+{{end}}
+{{template "foot" .}}

@@ -1,0 +1,10 @@
+{{template "head" .}}
+<article class="post-full">
+    <h1>{{.Title}}</h1>
+    <time datetime="{{.Date}}">{{.Date}}</time>
+    <div class="post-content">
+        {{.HTML}}
+    </div>
+    <p><a href="/" class="back-link">&larr; Back to home</a></p>
+</article>
+{{template "foot" .}}
