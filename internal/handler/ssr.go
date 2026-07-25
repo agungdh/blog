@@ -54,14 +54,71 @@ func (h *SSRHandler) Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := map[string]any{
-		"Title": post.Title + " - My Blog",
-		"Date":  post.Date,
-		"HTML":  template.HTML(htmlContent),
-		"Year":  time.Now().Year(),
+		"Title":    post.Title + " - My Blog",
+		"Post":     post,
+		"PostDate": post.Date,
+		"HTML":     template.HTML(htmlContent),
+		"Year":     time.Now().Year(),
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if err := h.tmpl.ExecuteTemplate(w, "post.html", data); err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+func (h *SSRHandler) Category(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+
+	category, err := h.svc.GetCategoryBySlug(slug)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	posts, err := h.svc.GetPostsByCategorySlug(slug)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	data := map[string]any{
+		"Title":      category.Name + " - My Blog",
+		"Posts":      posts,
+		"PageHeader": "Category: " + category.Name,
+		"Year":       time.Now().Year(),
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err := h.tmpl.ExecuteTemplate(w, "home.html", data); err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+func (h *SSRHandler) Tag(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+
+	tag, err := h.svc.GetTagBySlug(slug)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	posts, err := h.svc.GetPostsByTagSlug(slug)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	data := map[string]any{
+		"Title":      tag.Name + " - My Blog",
+		"Posts":      posts,
+		"PageHeader": "Tag: " + tag.Name,
+		"Year":       time.Now().Year(),
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err := h.tmpl.ExecuteTemplate(w, "home.html", data); err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }

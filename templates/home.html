@@ -1,10 +1,18 @@
 {{template "head" .}}
-<h1 class="page-title">Posts</h1>
+{{if .PageHeader}}<h1 class="page-title">{{.PageHeader}}</h1>{{else}}<h1 class="page-title">Posts</h1>{{end}}
 {{range .Posts}}
 <article class="post-card">
     <h2><a href="/posts/{{.Slug}}">{{.Title}}</a></h2>
-    <time datetime="{{.Date}}">{{.Date}}</time>
+    <div class="post-meta">
+        <time datetime="{{.Date}}">{{.Date}}</time>
+        {{if .Category}}<a href="/categories/{{.Category.Slug}}" class="category">{{.Category.Name}}</a>{{end}}
+    </div>
     <p class="post-summary">{{.Summary}}</p>
+    {{if .Tags}}
+    <div class="post-tags">
+        {{range .Tags}}<a href="/tags/{{.Slug}}" class="tag">{{.Name}}</a>{{end}}
+    </div>
+    {{end}}
 </article>
 {{else}}
 <p class="empty">No posts yet.</p>

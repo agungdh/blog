@@ -61,6 +61,36 @@ func (s *PostService) DeletePost(slug string) error {
 	return s.store.DeletePost(slug)
 }
 
+func (s *PostService) GetPostsByCategorySlug(slug string) ([]model.Post, error) {
+	posts, err := s.store.GetPostsByCategorySlug(slug)
+	if err != nil {
+		return nil, err
+	}
+	for i := range posts {
+		posts[i].Summary = s.generateSummary(posts[i].Markdown)
+	}
+	return posts, nil
+}
+
+func (s *PostService) GetPostsByTagSlug(slug string) ([]model.Post, error) {
+	posts, err := s.store.GetPostsByTagSlug(slug)
+	if err != nil {
+		return nil, err
+	}
+	for i := range posts {
+		posts[i].Summary = s.generateSummary(posts[i].Markdown)
+	}
+	return posts, nil
+}
+
+func (s *PostService) GetCategoryBySlug(slug string) (*model.Category, error) {
+	return s.store.GetCategoryBySlug(slug)
+}
+
+func (s *PostService) GetTagBySlug(slug string) (*model.Tag, error) {
+	return s.store.GetTagBySlug(slug)
+}
+
 func (s *PostService) generateSummary(markdown string) string {
 	clean := stripMarkdownSyntax(markdown)
 	runes := []rune(clean)
