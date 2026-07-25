@@ -3,6 +3,7 @@ name: Build
 on:
   push:
     branches: [master, main]
+    tags: ["v*"]
   pull_request:
     branches: [master, main]
 
@@ -30,3 +31,19 @@ jobs:
         with:
           name: blog-linux-amd64
           path: blog
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download binary
+        uses: actions/download-artifact@v4
+        with:
+          name: blog-linux-amd64
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: blog
