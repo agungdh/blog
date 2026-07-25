@@ -10,7 +10,7 @@ run: build ## Build and run the server
 	PORT=8080 DB_PATH=blog.db ./blog
 
 clean: ## Remove the binary and database
-	rm -f blog blog.db
+	rm -f blog blog.db blog.db-wal blog.db-shm
 
 vet: ## Run go vet
 	go vet ./...
