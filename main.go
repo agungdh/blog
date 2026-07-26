@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"database/sql"
 	"embed"
 	"html/template"
@@ -103,7 +104,7 @@ func main() {
 				}
 			}
 			if proto == "https" {
-				r.URL.Scheme = "https"
+				r.TLS = &tls.ConnectionState{}
 			}
 			next.ServeHTTP(w, r)
 		})
