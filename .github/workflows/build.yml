@@ -19,26 +19,6 @@ jobs:
             goos: linux
             binary: blog-linux-amd64
 
-          - os: ubuntu-24.04-arm
-            arch: arm64
-            goos: linux
-            binary: blog-linux-arm64
-
-          - os: windows-latest
-            arch: amd64
-            goos: windows
-            binary: blog-windows-amd64.exe
-
-          - os: macos-latest
-            arch: amd64
-            goos: darwin
-            binary: blog-darwin-amd64
-
-          - os: macos-latest
-            arch: arm64
-            goos: darwin
-            binary: blog-darwin-arm64
-
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -84,5 +64,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          chmod +x dist/blog-linux-* dist/blog-darwin-*
+          chmod +x dist/blog-linux-*
           gh release upload "${{ github.ref_name }}" dist/* --clobber
