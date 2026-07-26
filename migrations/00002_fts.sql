@@ -6,10 +6,10 @@ CREATE TRIGGER posts_ai AFTER INSERT ON posts BEGIN
   INSERT INTO posts_fts(rowid, title, markdown) VALUES (new.id, new.title, new.markdown);
 END;
 CREATE TRIGGER posts_ad AFTER DELETE ON posts BEGIN
-  INSERT INTO posts_fts(posts_fts, rowid, title, markdown) VALUES('delete', old.id, old.title, old.markdown);
+  DELETE FROM posts_fts WHERE rowid = old.id;
 END;
 CREATE TRIGGER posts_au AFTER UPDATE ON posts BEGIN
-  INSERT INTO posts_fts(posts_fts, rowid, title, markdown) VALUES('delete', old.id, old.title, old.markdown);
+  DELETE FROM posts_fts WHERE rowid = old.id;
   INSERT INTO posts_fts(rowid, title, markdown) VALUES (new.id, new.title, new.markdown);
 END;
 -- +goose StatementEnd
