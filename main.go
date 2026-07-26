@@ -139,6 +139,8 @@ func main() {
 	r.Get("/api/categories/{slug}/posts", ssr.APICategoryPosts)
 	r.Get("/api/tags/{slug}/posts", ssr.APITagPosts)
 
+	r.NotFound(ssr.NotFound)
+
 	if os.Getenv("AI_ENABLED") == "true" {
 		startGenerator(st)
 	} else {

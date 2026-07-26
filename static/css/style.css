@@ -247,3 +247,23 @@ main.container {
     color: var(--text-dim); font-size: 0.85rem;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+.not-found {
+    text-align: center;
+    padding: 4rem 1rem;
+}
+.not-found h1 {
+    font-size: 5rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+.not-found p {
+    font-size: 1.2rem;
+    color: var(--text-light);
+    margin-bottom: 2rem;
+}
+.not-found .btn {
+    display: inline-block;
+}

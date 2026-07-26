@@ -206,7 +206,7 @@ func (h *SSRHandler) Post(w http.ResponseWriter, r *http.Request) {
 
 	post, err := h.svc.GetPostBySlug(r.Context(), slug)
 	if err != nil {
-		http.NotFound(w, r)
+		h.NotFound(w, r)
 		return
 	}
 
@@ -235,7 +235,7 @@ func (h *SSRHandler) Category(w http.ResponseWriter, r *http.Request) {
 
 	category, err := h.svc.GetCategoryBySlug(r.Context(), slug)
 	if err != nil {
-		http.NotFound(w, r)
+		h.NotFound(w, r)
 		return
 	}
 
@@ -274,7 +274,7 @@ func (h *SSRHandler) Tag(w http.ResponseWriter, r *http.Request) {
 
 	tag, err := h.svc.GetTagBySlug(r.Context(), slug)
 	if err != nil {
-		http.NotFound(w, r)
+		h.NotFound(w, r)
 		return
 	}
 
@@ -344,6 +344,17 @@ func (h *SSRHandler) Tags(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.tmpl.ExecuteTemplate(w, "tags.html", data); err != nil {
 		log.Printf("template error (tags): %v", err)
+	}
+}
+
+func (h *SSRHandler) NotFound(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotFound)
+	data := map[string]any{
+		"Title": "404 - My Blog",
+		"Year":  time.Now().Year(),
+	}
+	if err := h.tmpl.ExecuteTemplate(w, "404.html", data); err != nil {
+		log.Printf("template error (404): %v", err)
 	}
 }
 
