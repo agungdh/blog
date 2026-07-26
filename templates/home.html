@@ -19,7 +19,7 @@
 {{end}}
 {{if .Pagination}}
 {{if .Pagination.HasNext}}
-<div id="load-more" data-after="{{.Pagination.NextSlug}}"></div>
+<div id="load-more" data-api="{{.ApiPath}}" data-after="{{.Pagination.NextSlug}}"></div>
 {{end}}
 {{end}}
 {{template "foot" .}}

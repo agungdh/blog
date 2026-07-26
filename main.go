@@ -124,6 +124,10 @@ func main() {
 	r.Get("/categories/{slug}", ssr.Category)
 	r.Get("/tags/{slug}", ssr.Tag)
 
+	r.Get("/api/posts", ssr.APIPosts)
+	r.Get("/api/categories/{slug}/posts", ssr.APICategoryPosts)
+	r.Get("/api/tags/{slug}/posts", ssr.APITagPosts)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
