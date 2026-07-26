@@ -88,6 +88,14 @@ func main() {
 	ssr := handler.NewSSR(svc, tmpl)
 
 	r := chi.NewRouter()
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Header.Get("X-Forwarded-Proto") == "https" {
+				r.URL.Scheme = "https"
+			}
+			next.ServeHTTP(w, r)
+		})
+	})
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.ClientIPFromRemoteAddr)
