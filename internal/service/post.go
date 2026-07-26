@@ -190,12 +190,28 @@ func (s *PostService) GetAllCategories(ctx context.Context) ([]model.Category, e
 	return s.store.GetAllCategories(ctx)
 }
 
+func (s *PostService) SearchCategories(ctx context.Context, query string, limit int) ([]model.Category, error) {
+	return s.store.SearchCategories(ctx, query, limit)
+}
+
+func (s *PostService) GetCategoriesBySlugs(ctx context.Context, slugs []string) ([]model.Category, error) {
+	return s.store.GetCategoriesBySlugs(ctx, slugs)
+}
+
 func (s *PostService) GetTagBySlug(ctx context.Context, slug string) (*model.Tag, error) {
 	return s.store.GetTagBySlug(ctx, slug)
 }
 
 func (s *PostService) GetAllTags(ctx context.Context) ([]model.Tag, error) {
 	return s.store.GetAllTags(ctx)
+}
+
+func (s *PostService) SearchTags(ctx context.Context, query string, limit int) ([]model.Tag, error) {
+	return s.store.SearchTags(ctx, query, limit)
+}
+
+func (s *PostService) GetTagsBySlugs(ctx context.Context, slugs []string) ([]model.Tag, error) {
+	return s.store.GetTagsBySlugs(ctx, slugs)
 }
 
 func (s *PostService) generateSummary(markdown string) string {

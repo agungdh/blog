@@ -136,7 +136,9 @@ func main() {
 	r.Get("/tags/{slug}", ssr.Tag)
 
 	r.Get("/api/posts", ssr.APIPosts)
+	r.Get("/api/categories", ssr.APISearchCategories)
 	r.Get("/api/categories/{slug}/posts", ssr.APICategoryPosts)
+	r.Get("/api/tags", ssr.APISearchTags)
 	r.Get("/api/tags/{slug}/posts", ssr.APITagPosts)
 
 	r.NotFound(ssr.NotFound)

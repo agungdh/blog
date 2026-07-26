@@ -150,6 +150,25 @@ func (s *Store) GetAllCategories(ctx context.Context) ([]model.Category, error) 
 	return categories, err
 }
 
+func (s *Store) SearchCategories(ctx context.Context, query string, limit int) ([]model.Category, error) {
+	var categories []model.Category
+	q := s.db.NewSelect().Model(&categories).Order("name").Limit(limit)
+	if query != "" {
+		q = q.Where("name LIKE ?", "%"+query+"%")
+	}
+	err := q.Scan(ctx)
+	return categories, err
+}
+
+func (s *Store) GetCategoriesBySlugs(ctx context.Context, slugs []string) ([]model.Category, error) {
+	if len(slugs) == 0 {
+		return nil, nil
+	}
+	var categories []model.Category
+	err := s.db.NewSelect().Model(&categories).Where("slug IN (?)", bun.In(slugs)).Scan(ctx)
+	return categories, err
+}
+
 func (s *Store) GetCategoryBySlug(ctx context.Context, slug string) (*model.Category, error) {
 	var c model.Category
 	err := s.db.NewSelect().Model(&c).Where("slug = ?", slug).Scan(ctx)
@@ -167,6 +186,25 @@ func (s *Store) CreateTag(ctx context.Context, t *model.Tag) error {
 func (s *Store) GetAllTags(ctx context.Context) ([]model.Tag, error) {
 	var tags []model.Tag
 	err := s.db.NewSelect().Model(&tags).Order("name").Scan(ctx)
+	return tags, err
+}
+
+func (s *Store) SearchTags(ctx context.Context, query string, limit int) ([]model.Tag, error) {
+	var tags []model.Tag
+	q := s.db.NewSelect().Model(&tags).Order("name").Limit(limit)
+	if query != "" {
+		q = q.Where("name LIKE ?", "%"+query+"%")
+	}
+	err := q.Scan(ctx)
+	return tags, err
+}
+
+func (s *Store) GetTagsBySlugs(ctx context.Context, slugs []string) ([]model.Tag, error) {
+	if len(slugs) == 0 {
+		return nil, nil
+	}
+	var tags []model.Tag
+	err := s.db.NewSelect().Model(&tags).Where("slug IN (?)", bun.In(slugs)).Scan(ctx)
 	return tags, err
 }
 

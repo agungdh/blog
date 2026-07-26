@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"blog/internal/model"
 	"blog/internal/service"
 	"blog/internal/store"
 )
@@ -83,19 +84,29 @@ func (h *SSRHandler) Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	categories, _ := h.svc.GetAllCategories(r.Context())
-	tags, _ := h.svc.GetAllTags(r.Context())
+	var selectedCategory *model.Category
+	if filter.Category != "" {
+		cats, _ := h.svc.GetCategoriesBySlugs(r.Context(), []string{filter.Category})
+		if len(cats) > 0 {
+			selectedCategory = &cats[0]
+		}
+	}
+
+	var selectedTags []model.Tag
+	if len(filter.Tags) > 0 {
+		selectedTags, _ = h.svc.GetTagsBySlugs(r.Context(), filter.Tags)
+	}
 
 	data := map[string]any{
-		"Title":          "My Blog",
-		"Posts":          paged.Posts,
-		"Pagination":     paged,
-		"ApiPath":        "/api/posts",
-		"Filter":         filter,
-		"FilterParams":   filterQueryParams(filter),
-		"AllCategories":  categories,
-		"AllTags":        tags,
-		"Year":           time.Now().Year(),
+		"Title":            "My Blog",
+		"Posts":            paged.Posts,
+		"Pagination":       paged,
+		"ApiPath":          "/api/posts",
+		"Filter":           filter,
+		"FilterParams":     filterQueryParams(filter),
+		"SelectedCategory": selectedCategory,
+		"SelectedTags":     selectedTags,
+		"Year":             time.Now().Year(),
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -150,6 +161,41 @@ func (h *SSRHandler) APITagPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, paged)
+}
+
+func (h *SSRHandler) APISearchCategories(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query().Get("q")
+	categories, err := h.svc.SearchCategories(r.Context(), q, 10)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	results := make([]searchResult, len(categories))
+	for i, c := range categories {
+		results[i] = searchResult{Name: c.Name, Slug: c.Slug}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+func (h *SSRHandler) APISearchTags(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query().Get("q")
+	tags, err := h.svc.SearchTags(r.Context(), q, 10)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	results := make([]searchResult, len(tags))
+	for i, t := range tags {
+		results[i] = searchResult{Name: t.Name, Slug: t.Slug}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
+}
+
+type searchResult struct {
+	Name string `json:"name"`
+	Slug string `json:"slug"`
 }
 
 type jsonPost struct {
@@ -249,7 +295,10 @@ func (h *SSRHandler) Category(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tags, _ := h.svc.GetAllTags(r.Context())
+	var selectedTags []model.Tag
+	if len(filter.Tags) > 0 {
+		selectedTags, _ = h.svc.GetTagsBySlugs(r.Context(), filter.Tags)
+	}
 
 	data := map[string]any{
 		"Title":        category.Name + " - My Blog",
@@ -259,7 +308,7 @@ func (h *SSRHandler) Category(w http.ResponseWriter, r *http.Request) {
 		"ApiPath":      "/api/categories/" + slug + "/posts",
 		"Filter":       filter,
 		"FilterParams": filterQueryParams(filter),
-		"AllTags":      tags,
+		"SelectedTags": selectedTags,
 		"Year":         time.Now().Year(),
 	}
 
@@ -290,7 +339,10 @@ func (h *SSRHandler) Tag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tags, _ := h.svc.GetAllTags(r.Context())
+	var selectedTags []model.Tag
+	if len(filter.Tags) > 0 {
+		selectedTags, _ = h.svc.GetTagsBySlugs(r.Context(), filter.Tags)
+	}
 
 	data := map[string]any{
 		"Title":        tag.Name + " - My Blog",
@@ -300,7 +352,7 @@ func (h *SSRHandler) Tag(w http.ResponseWriter, r *http.Request) {
 		"ApiPath":      "/api/tags/" + slug + "/posts",
 		"Filter":       filter,
 		"FilterParams": filterQueryParams(filter),
-		"AllTags":      tags,
+		"SelectedTags": selectedTags,
 		"Year":         time.Now().Year(),
 	}
 

@@ -10,10 +10,15 @@
         {{if not .PageHeader}}
         <div class="filter-group">
             <label class="filter-label">Category</label>
-            <select name="category" class="filter-input">
-                <option value="">All</option>
-                {{range .AllCategories}}<option value="{{.Slug}}"{{if eq .Slug $.Filter.Category}} selected{{end}}>{{.Name}}</option>{{end}}
-            </select>
+            <div class="searchable-input-wrapper" id="category-search-wrapper">
+                <input type="text" class="filter-input" id="category-search"
+                    placeholder="Search categories..."
+                    value="{{if .SelectedCategory}}{{.SelectedCategory.Name}}{{end}}"
+                    autocomplete="off">
+                <input type="hidden" name="category"
+                    value="{{if .SelectedCategory}}{{.SelectedCategory.Slug}}{{end}}">
+                <div class="search-dropdown"></div>
+            </div>
         </div>
         {{end}}
         <div class="filter-group">
@@ -24,18 +29,26 @@
                 <input type="date" name="to" class="filter-input" value="{{.Filter.DateTo}}">
             </div>
         </div>
-        {{if .AllTags}}
-        <details class="filter-group filter-tags-details">
-            <summary class="filter-label filter-summary">Tags {{if .Filter.Tags}}<span class="filter-badge">{{len .Filter.Tags}}</span>{{end}}</summary>
-            <div class="filter-tags">
-                {{range .AllTags}}
-                <label class="filter-tag-label">
-                    <input type="checkbox" name="tags" value="{{.Slug}}"{{if contains $.Filter.Tags .Slug}} checked{{end}}> {{.Name}}
-                </label>
-                {{end}}
+        <div class="filter-group">
+            <span class="filter-label">Tags {{if .SelectedTags}}<span class="filter-badge">{{len .SelectedTags}}</span>{{end}}</span>
+            <div class="searchable-input-wrapper" id="tags-search-wrapper">
+                <div class="tag-chips" id="tag-chips">
+                    {{range .SelectedTags}}
+                    <span class="tag-chip" data-slug="{{.Slug}}">
+                        {{.Name}}<button type="button" class="tag-chip-remove">&times;</button>
+                    </span>
+                    {{end}}
+                </div>
+                <input type="text" class="filter-input" id="tags-search"
+                    placeholder="Search tags..." autocomplete="off">
+                <div class="search-dropdown"></div>
+                <div id="tags-hidden" style="display:none">
+                    {{range .SelectedTags}}
+                    <input type="checkbox" name="tags" value="{{.Slug}}" checked>
+                    {{end}}
+                </div>
             </div>
-        </details>
-        {{end}}
+        </div>
         <div class="filter-actions">
             <button type="submit" class="btn btn-primary">Filter</button>
             <a href="{{if .PageHeader}}.{{else}}.{{end}}" class="btn btn-ghost">Clear</a>

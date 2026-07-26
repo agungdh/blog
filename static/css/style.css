@@ -267,3 +267,30 @@ main.container {
 .not-found .btn {
     display: inline-block;
 }
+
+.searchable-input-wrapper { position: relative; }
+.search-dropdown {
+    position: absolute; top: 100%; left: 0; right: 0; z-index: 10;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    max-height: 200px; overflow-y: auto; display: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+html.dark .search-dropdown { box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+.search-dropdown-item {
+    padding: 0.4rem 0.6rem; font-size: 0.85rem; cursor: pointer; color: var(--text);
+}
+.search-dropdown-item:hover { background: var(--code-bg); }
+
+.tag-chips {
+    display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.35rem;
+}
+.tag-chip {
+    display: inline-flex; align-items: center; gap: 0.15rem;
+    font-size: 0.75rem; background: var(--tag-bg); color: var(--tag-text);
+    padding: 0.15rem 0.45rem; border-radius: 10px;
+}
+.tag-chip-remove {
+    background: none; border: none; cursor: pointer; font-size: 0.9rem;
+    line-height: 1; padding: 0; color: var(--text-light);
+}
+.tag-chip-remove:hover { color: var(--text); }
