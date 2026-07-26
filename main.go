@@ -109,7 +109,6 @@ func main() {
 			next.ServeHTTP(w, r)
 		})
 	})
-	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.ClientIPFromRemoteAddr)
 
@@ -130,6 +129,8 @@ func main() {
 
 	if os.Getenv("AI_ENABLED") == "true" {
 		startGenerator(st)
+	} else {
+		log.Printf("post generator: disabled (set AI_ENABLED=true to enable)")
 	}
 
 	port := os.Getenv("PORT")
