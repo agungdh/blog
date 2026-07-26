@@ -126,6 +126,6 @@
 	}
 
 	function escAttr(s) {
-		return String(s).replace(/"/g, '\\"');
+		return String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 	}
 })();
