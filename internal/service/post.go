@@ -3,6 +3,7 @@ package service
 import (
 	"bytes"
 	"context"
+	"math"
 	"strings"
 
 	"github.com/yuin/goldmark"
@@ -16,6 +17,18 @@ type PostService struct {
 	md    goldmark.Markdown
 }
 
+type PagedPosts struct {
+	Posts      []model.Post
+	Total      int
+	Page       int
+	PerPage    int
+	TotalPages int
+	HasNext    bool
+	HasPrev    bool
+	PrevPage   int
+	NextPage   int
+}
+
 func New(s *store.Store) *PostService {
 	return &PostService{
 		store: s,
@@ -23,15 +36,42 @@ func New(s *store.Store) *PostService {
 	}
 }
 
-func (s *PostService) GetAllPosts(ctx context.Context) ([]model.Post, error) {
-	posts, err := s.store.GetAllPosts(ctx)
+func (s *PostService) GetPagedPosts(ctx context.Context, page, perPage int) (*PagedPosts, error) {
+	if page < 1 {
+		page = 1
+	}
+
+	total, err := s.store.CountPosts(ctx)
 	if err != nil {
 		return nil, err
 	}
+
+	totalPages := int(math.Ceil(float64(total) / float64(perPage)))
+	if totalPages > 0 && page > totalPages {
+		page = totalPages
+	}
+	offset := (page - 1) * perPage
+
+	posts, err := s.store.GetPosts(ctx, offset, perPage)
+	if err != nil {
+		return nil, err
+	}
+
 	for i := range posts {
 		posts[i].Summary = s.generateSummary(posts[i].Markdown)
 	}
-	return posts, nil
+
+	return &PagedPosts{
+		Posts:      posts,
+		Total:      total,
+		Page:       page,
+		PerPage:    perPage,
+		TotalPages: totalPages,
+		HasNext:    page < totalPages,
+		HasPrev:    page > 1,
+		PrevPage:   page - 1,
+		NextPage:   page + 1,
+	}, nil
 }
 
 func (s *PostService) GetPostBySlug(ctx context.Context, slug string) (*model.Post, error) {
@@ -58,26 +98,76 @@ func (s *PostService) DeletePost(ctx context.Context, slug string) error {
 	return s.store.DeletePost(ctx, slug)
 }
 
-func (s *PostService) GetPostsByCategorySlug(ctx context.Context, slug string) ([]model.Post, error) {
-	posts, err := s.store.GetPostsByCategorySlug(ctx, slug)
+func (s *PostService) GetPagedPostsByCategorySlug(ctx context.Context, slug string, page, perPage int) (*PagedPosts, error) {
+	if page < 1 {
+		page = 1
+	}
+
+	total, err := s.store.CountPostsByCategorySlug(ctx, slug)
 	if err != nil {
 		return nil, err
 	}
+
+	totalPages := int(math.Ceil(float64(total) / float64(perPage)))
+	if totalPages > 0 && page > totalPages {
+		page = totalPages
+	}
+	offset := (page - 1) * perPage
+
+	posts, err := s.store.GetPostsByCategorySlug(ctx, slug, offset, perPage)
+	if err != nil {
+		return nil, err
+	}
+
 	for i := range posts {
 		posts[i].Summary = s.generateSummary(posts[i].Markdown)
 	}
-	return posts, nil
+
+	return &PagedPosts{
+		Posts:      posts,
+		Total:      total,
+		Page:       page,
+		PerPage:    perPage,
+		TotalPages: totalPages,
+		HasNext:    page < totalPages,
+		HasPrev:    page > 1,
+	}, nil
 }
 
-func (s *PostService) GetPostsByTagSlug(ctx context.Context, slug string) ([]model.Post, error) {
-	posts, err := s.store.GetPostsByTagSlug(ctx, slug)
+func (s *PostService) GetPagedPostsByTagSlug(ctx context.Context, slug string, page, perPage int) (*PagedPosts, error) {
+	if page < 1 {
+		page = 1
+	}
+
+	total, err := s.store.CountPostsByTagSlug(ctx, slug)
 	if err != nil {
 		return nil, err
 	}
+
+	totalPages := int(math.Ceil(float64(total) / float64(perPage)))
+	if totalPages > 0 && page > totalPages {
+		page = totalPages
+	}
+	offset := (page - 1) * perPage
+
+	posts, err := s.store.GetPostsByTagSlug(ctx, slug, offset, perPage)
+	if err != nil {
+		return nil, err
+	}
+
 	for i := range posts {
 		posts[i].Summary = s.generateSummary(posts[i].Markdown)
 	}
-	return posts, nil
+
+	return &PagedPosts{
+		Posts:      posts,
+		Total:      total,
+		Page:       page,
+		PerPage:    perPage,
+		TotalPages: totalPages,
+		HasNext:    page < totalPages,
+		HasPrev:    page > 1,
+	}, nil
 }
 
 func (s *PostService) GetCategoryBySlug(ctx context.Context, slug string) (*model.Category, error) {

@@ -17,4 +17,11 @@
 {{else}}
 <p class="empty">No posts yet.</p>
 {{end}}
+{{if .Pagination}}
+<nav class="pagination">
+    {{if .Pagination.HasPrev}}<a href="?page={{.Pagination.PrevPage}}" rel="prev">&larr; Previous</a>{{end}}
+    <span class="page-info">Page {{.Pagination.Page}} of {{.Pagination.TotalPages}}</span>
+    {{if .Pagination.HasNext}}<a href="?page={{.Pagination.NextPage}}" rel="next">Next &rarr;</a>{{end}}
+</nav>
+{{end}}
 {{template "foot" .}}

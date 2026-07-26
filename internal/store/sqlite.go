@@ -17,15 +17,22 @@ func New(db *bun.DB) *Store {
 	return &Store{db: db}
 }
 
-func (s *Store) GetAllPosts(ctx context.Context) ([]model.Post, error) {
+func (s *Store) GetPosts(ctx context.Context, offset, limit int) ([]model.Post, error) {
 	var posts []model.Post
 	err := s.db.NewSelect().
 		Model(&posts).
 		Relation("Category").
 		Relation("Tags").
 		Order("date DESC").
+		Offset(offset).
+		Limit(limit).
 		Scan(ctx)
 	return posts, err
+}
+
+func (s *Store) CountPosts(ctx context.Context) (int, error) {
+	count, err := s.db.NewSelect().Model((*model.Post)(nil)).Count(ctx)
+	return count, err
 }
 
 func (s *Store) GetPostBySlug(ctx context.Context, slug string) (*model.Post, error) {
@@ -133,7 +140,7 @@ func (s *Store) GetTagBySlug(ctx context.Context, slug string) (*model.Tag, erro
 	return &t, nil
 }
 
-func (s *Store) GetPostsByCategorySlug(ctx context.Context, slug string) ([]model.Post, error) {
+func (s *Store) GetPostsByCategorySlug(ctx context.Context, slug string, offset, limit int) ([]model.Post, error) {
 	var posts []model.Post
 	err := s.db.NewSelect().
 		Model(&posts).
@@ -141,11 +148,21 @@ func (s *Store) GetPostsByCategorySlug(ctx context.Context, slug string) ([]mode
 		Relation("Tags").
 		Where("category_id IN (SELECT id FROM categories WHERE slug = ?)", slug).
 		Order("date DESC").
+		Offset(offset).
+		Limit(limit).
 		Scan(ctx)
 	return posts, err
 }
 
-func (s *Store) GetPostsByTagSlug(ctx context.Context, slug string) ([]model.Post, error) {
+func (s *Store) CountPostsByCategorySlug(ctx context.Context, slug string) (int, error) {
+	count, err := s.db.NewSelect().
+		Model((*model.Post)(nil)).
+		Where("category_id IN (SELECT id FROM categories WHERE slug = ?)", slug).
+		Count(ctx)
+	return count, err
+}
+
+func (s *Store) GetPostsByTagSlug(ctx context.Context, slug string, offset, limit int) ([]model.Post, error) {
 	var posts []model.Post
 	err := s.db.NewSelect().
 		Model(&posts).
@@ -153,6 +170,16 @@ func (s *Store) GetPostsByTagSlug(ctx context.Context, slug string) ([]model.Pos
 		Relation("Tags").
 		Where("post.id IN (SELECT pt.post_id FROM post_tags pt JOIN tags t ON t.id = pt.tag_id WHERE t.slug = ?)", slug).
 		Order("post.date DESC").
+		Offset(offset).
+		Limit(limit).
 		Scan(ctx)
 	return posts, err
+}
+
+func (s *Store) CountPostsByTagSlug(ctx context.Context, slug string) (int, error) {
+	count, err := s.db.NewSelect().
+		Model((*model.Post)(nil)).
+		Where("post.id IN (SELECT pt.post_id FROM post_tags pt JOIN tags t ON t.id = pt.tag_id WHERE t.slug = ?)", slug).
+		Count(ctx)
+	return count, err
 }

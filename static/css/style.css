@@ -219,3 +219,27 @@ a:hover {
     color: #999;
     font-style: italic;
 }
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.2rem;
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #eee;
+    font-size: 0.95rem;
+}
+.pagination a {
+    color: #2563eb;
+    text-decoration: none;
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    transition: background 0.15s;
+}
+.pagination a:hover {
+    background: #eff6ff;
+}
+.page-info {
+    color: #666;
+}

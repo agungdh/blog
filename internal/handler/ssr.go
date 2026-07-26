@@ -3,6 +3,7 @@ package handler
 import (
 	"html/template"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -19,17 +20,30 @@ func NewSSR(svc *service.PostService, tmpl *template.Template) *SSRHandler {
 	return &SSRHandler{svc: svc, tmpl: tmpl}
 }
 
+func parsePage(r *http.Request) int {
+	page, err := strconv.Atoi(r.URL.Query().Get("page"))
+	if err != nil || page < 1 {
+		return 1
+	}
+	return page
+}
+
+const postsPerPage = 10
+
 func (h *SSRHandler) Home(w http.ResponseWriter, r *http.Request) {
-	posts, err := h.svc.GetAllPosts(r.Context())
+	page := parsePage(r)
+
+	paged, err := h.svc.GetPagedPosts(r.Context(), page, postsPerPage)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
 	data := map[string]any{
-		"Title": "My Blog",
-		"Posts": posts,
-		"Year":  time.Now().Year(),
+		"Title":      "My Blog",
+		"Posts":      paged.Posts,
+		"Pagination": paged,
+		"Year":       time.Now().Year(),
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -76,7 +90,8 @@ func (h *SSRHandler) Category(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	posts, err := h.svc.GetPostsByCategorySlug(r.Context(), slug)
+	page := parsePage(r)
+	paged, err := h.svc.GetPagedPostsByCategorySlug(r.Context(), slug, page, postsPerPage)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -84,8 +99,9 @@ func (h *SSRHandler) Category(w http.ResponseWriter, r *http.Request) {
 
 	data := map[string]any{
 		"Title":      category.Name + " - My Blog",
-		"Posts":      posts,
+		"Posts":      paged.Posts,
 		"PageHeader": "Category: " + category.Name,
+		"Pagination": paged,
 		"Year":       time.Now().Year(),
 	}
 
@@ -104,7 +120,8 @@ func (h *SSRHandler) Tag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	posts, err := h.svc.GetPostsByTagSlug(r.Context(), slug)
+	page := parsePage(r)
+	paged, err := h.svc.GetPagedPostsByTagSlug(r.Context(), slug, page, postsPerPage)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -112,8 +129,9 @@ func (h *SSRHandler) Tag(w http.ResponseWriter, r *http.Request) {
 
 	data := map[string]any{
 		"Title":      tag.Name + " - My Blog",
-		"Posts":      posts,
+		"Posts":      paged.Posts,
 		"PageHeader": "Tag: " + tag.Name,
+		"Pagination": paged,
 		"Year":       time.Now().Year(),
 	}
 

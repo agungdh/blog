@@ -121,12 +121,12 @@ func main() {
 }
 
 func seedData(ctx context.Context, st *store.Store) {
-	posts, err := st.GetAllPosts(ctx)
+		count, err := st.CountPosts(ctx)
 	if err != nil {
 		log.Printf("seed: failed to check existing posts: %v", err)
 		return
 	}
-	if len(posts) > 0 {
+	if count > 0 {
 		return
 	}
 
