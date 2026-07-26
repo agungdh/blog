@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/uptrace/bun"
 
@@ -245,7 +246,7 @@ func (s *Store) GetFilteredPosts(ctx context.Context, filter FilterParams, limit
 
 func applyFilters(q *bun.SelectQuery, f FilterParams) *bun.SelectQuery {
 	if f.Search != "" {
-		q = q.Where("post.id IN (SELECT rowid FROM posts_fts WHERE posts_fts MATCH ?)", f.Search)
+		q = q.Where("post.id IN (SELECT rowid FROM posts_fts WHERE posts_fts MATCH ?)", sanitizeFTSQuery(f.Search))
 	}
 	if f.Category != "" {
 		q = q.Where("category_id IN (SELECT id FROM categories WHERE slug = ?)", f.Category)
@@ -260,6 +261,17 @@ func applyFilters(q *bun.SelectQuery, f FilterParams) *bun.SelectQuery {
 		q = q.Where("post.date <= ?", f.DateTo)
 	}
 	return q
+}
+
+func sanitizeFTSQuery(q string) string {
+	q = strings.ReplaceAll(q, `"`, "")
+	q = strings.ReplaceAll(q, "+", " ")
+	q = strings.ReplaceAll(q, "-", " ")
+	q = strings.ReplaceAll(q, "*", " ")
+	q = strings.ReplaceAll(q, "(", " ")
+	q = strings.ReplaceAll(q, ")", " ")
+	q = strings.ReplaceAll(q, "/", " ")
+	return strings.Join(strings.Fields(q), " ")
 }
 
 func (s *Store) GetPostsByTagSlugAfter(ctx context.Context, tagSlug, postSlug string, limit int) ([]model.Post, error) {
