@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"html/template"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -99,7 +100,7 @@ func (h *SSRHandler) Home(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if err := h.tmpl.ExecuteTemplate(w, "home.html", data); err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Printf("template error (home): %v", err)
 	}
 }
 
@@ -225,7 +226,7 @@ func (h *SSRHandler) Post(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if err := h.tmpl.ExecuteTemplate(w, "post.html", data); err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Printf("template error (post): %v", err)
 	}
 }
 
@@ -264,7 +265,7 @@ func (h *SSRHandler) Category(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if err := h.tmpl.ExecuteTemplate(w, "home.html", data); err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Printf("template error (category): %v", err)
 	}
 }
 
@@ -305,7 +306,7 @@ func (h *SSRHandler) Tag(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if err := h.tmpl.ExecuteTemplate(w, "home.html", data); err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Printf("template error (tag): %v", err)
 	}
 }
 
@@ -324,7 +325,7 @@ func (h *SSRHandler) Categories(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if err := h.tmpl.ExecuteTemplate(w, "categories.html", data); err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Printf("template error (categories): %v", err)
 	}
 }
 
@@ -342,7 +343,7 @@ func (h *SSRHandler) Tags(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.tmpl.ExecuteTemplate(w, "tags.html", data); err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Printf("template error (tags): %v", err)
 	}
 }
 
