@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -90,7 +91,18 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.Header.Get("X-Forwarded-Proto") == "https" {
+			proto := r.Header.Get("X-Forwarded-Proto")
+			if proto == "" {
+				for _, fwd := range r.Header.Values("Forwarded") {
+					for _, part := range strings.Split(fwd, ";") {
+						kv := strings.SplitN(strings.TrimSpace(part), "=", 2)
+						if len(kv) == 2 && strings.TrimSpace(kv[0]) == "proto" {
+							proto = strings.Trim(kv[1], `"`)
+						}
+					}
+				}
+			}
+			if proto == "https" {
 				r.URL.Scheme = "https"
 			}
 			next.ServeHTTP(w, r)
