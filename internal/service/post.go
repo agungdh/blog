@@ -3,7 +3,6 @@ package service
 import (
 	"bytes"
 	"context"
-	"math"
 	"strings"
 
 	"github.com/yuin/goldmark"
@@ -17,16 +16,12 @@ type PostService struct {
 	md    goldmark.Markdown
 }
 
-type PagedPosts struct {
-	Posts      []model.Post
-	Total      int
-	Page       int
-	PerPage    int
-	TotalPages int
-	HasNext    bool
-	HasPrev    bool
-	PrevPage   int
-	NextPage   int
+type CursorPage struct {
+	Posts    []model.Post
+	HasNext  bool
+	NextSlug string
+	HasPrev  bool
+	PrevSlug string
 }
 
 func New(s *store.Store) *PostService {
@@ -36,41 +31,64 @@ func New(s *store.Store) *PostService {
 	}
 }
 
-func (s *PostService) GetPagedPosts(ctx context.Context, page, perPage int) (*PagedPosts, error) {
-	if page < 1 {
-		page = 1
-	}
+func (s *PostService) GetCursorPosts(ctx context.Context, after, before string, limit int) (*CursorPage, error) {
+	var posts []model.Post
+	var err error
+	hasPrev := false
+	hasNext := false
 
-	total, err := s.store.CountPosts(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	totalPages := int(math.Ceil(float64(total) / float64(perPage)))
-	if totalPages > 0 && page > totalPages {
-		page = totalPages
-	}
-	offset := (page - 1) * perPage
-
-	posts, err := s.store.GetPosts(ctx, offset, perPage)
-	if err != nil {
-		return nil, err
+	if before != "" {
+		posts, err = s.store.GetPostsBefore(ctx, before, limit+1)
+		if err != nil {
+			return nil, err
+		}
+		if len(posts) > limit {
+			hasPrev = true
+			posts = posts[len(posts)-limit:]
+		}
+		for i, j := 0, len(posts)-1; i < j; i, j = i+1, j-1 {
+			posts[i], posts[j] = posts[j], posts[i]
+		}
+		hasNext = len(posts) > 0
+	} else if after != "" {
+		posts, err = s.store.GetPostsAfter(ctx, after, limit+1)
+		if err != nil {
+			return nil, err
+		}
+		if len(posts) > limit {
+			hasNext = true
+			posts = posts[:limit]
+		}
+		hasPrev = true
+	} else {
+		posts, err = s.store.GetLatestPosts(ctx, limit+1)
+		if err != nil {
+			return nil, err
+		}
+		if len(posts) > limit {
+			hasNext = true
+			posts = posts[:limit]
+		}
 	}
 
 	for i := range posts {
 		posts[i].Summary = s.generateSummary(posts[i].Markdown)
 	}
 
-	return &PagedPosts{
-		Posts:      posts,
-		Total:      total,
-		Page:       page,
-		PerPage:    perPage,
-		TotalPages: totalPages,
-		HasNext:    page < totalPages,
-		HasPrev:    page > 1,
-		PrevPage:   page - 1,
-		NextPage:   page + 1,
+	var nextSlug, prevSlug string
+	if hasNext && len(posts) > 0 {
+		nextSlug = posts[len(posts)-1].Slug
+	}
+	if hasPrev && len(posts) > 0 {
+		prevSlug = posts[0].Slug
+	}
+
+	return &CursorPage{
+		Posts:    posts,
+		HasNext:  hasNext,
+		NextSlug: nextSlug,
+		HasPrev:  hasPrev,
+		PrevSlug: prevSlug,
 	}, nil
 }
 
@@ -98,75 +116,117 @@ func (s *PostService) DeletePost(ctx context.Context, slug string) error {
 	return s.store.DeletePost(ctx, slug)
 }
 
-func (s *PostService) GetPagedPostsByCategorySlug(ctx context.Context, slug string, page, perPage int) (*PagedPosts, error) {
-	if page < 1 {
-		page = 1
+func (s *PostService) GetCursorPostsByCategorySlug(ctx context.Context, catSlug, after, before string, limit int) (*CursorPage, error) {
+	var posts []model.Post
+	var err error
+	hasPrev := false
+	hasNext := false
+
+	if before != "" {
+		posts, err = s.store.GetPostsByCategorySlugBefore(ctx, catSlug, before, limit+1)
+		if err != nil {
+			return nil, err
+		}
+		if len(posts) > limit {
+			hasPrev = true
+			posts = posts[len(posts)-limit:]
+		}
+		for i, j := 0, len(posts)-1; i < j; i, j = i+1, j-1 {
+			posts[i], posts[j] = posts[j], posts[i]
+		}
+	} else if after != "" {
+		posts, err = s.store.GetPostsByCategorySlugAfter(ctx, catSlug, after, limit+1)
+		if err != nil {
+			return nil, err
+		}
+		hasPrev = true
+	} else {
+		posts, err = s.store.GetLatestPostsByCategorySlug(ctx, catSlug, limit+1)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	total, err := s.store.CountPostsByCategorySlug(ctx, slug)
-	if err != nil {
-		return nil, err
-	}
-
-	totalPages := int(math.Ceil(float64(total) / float64(perPage)))
-	if totalPages > 0 && page > totalPages {
-		page = totalPages
-	}
-	offset := (page - 1) * perPage
-
-	posts, err := s.store.GetPostsByCategorySlug(ctx, slug, offset, perPage)
-	if err != nil {
-		return nil, err
+	hasNext = len(posts) > limit
+	if hasNext {
+		posts = posts[:limit]
 	}
 
 	for i := range posts {
 		posts[i].Summary = s.generateSummary(posts[i].Markdown)
 	}
 
-	return &PagedPosts{
-		Posts:      posts,
-		Total:      total,
-		Page:       page,
-		PerPage:    perPage,
-		TotalPages: totalPages,
-		HasNext:    page < totalPages,
-		HasPrev:    page > 1,
+	var nextSlug, prevSlug string
+	if hasNext && len(posts) > 0 {
+		nextSlug = posts[len(posts)-1].Slug
+	}
+	if hasPrev && len(posts) > 0 {
+		prevSlug = posts[0].Slug
+	}
+
+	return &CursorPage{
+		Posts:    posts,
+		HasNext:  hasNext,
+		NextSlug: nextSlug,
+		HasPrev:  hasPrev,
+		PrevSlug: prevSlug,
 	}, nil
 }
 
-func (s *PostService) GetPagedPostsByTagSlug(ctx context.Context, slug string, page, perPage int) (*PagedPosts, error) {
-	if page < 1 {
-		page = 1
+func (s *PostService) GetCursorPostsByTagSlug(ctx context.Context, tagSlug, after, before string, limit int) (*CursorPage, error) {
+	var posts []model.Post
+	var err error
+	hasPrev := false
+	hasNext := false
+
+	if before != "" {
+		posts, err = s.store.GetPostsByTagSlugBefore(ctx, tagSlug, before, limit+1)
+		if err != nil {
+			return nil, err
+		}
+		if len(posts) > limit {
+			hasPrev = true
+			posts = posts[len(posts)-limit:]
+		}
+		for i, j := 0, len(posts)-1; i < j; i, j = i+1, j-1 {
+			posts[i], posts[j] = posts[j], posts[i]
+		}
+	} else if after != "" {
+		posts, err = s.store.GetPostsByTagSlugAfter(ctx, tagSlug, after, limit+1)
+		if err != nil {
+			return nil, err
+		}
+		hasPrev = true
+	} else {
+		posts, err = s.store.GetLatestPostsByTagSlug(ctx, tagSlug, limit+1)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	total, err := s.store.CountPostsByTagSlug(ctx, slug)
-	if err != nil {
-		return nil, err
-	}
-
-	totalPages := int(math.Ceil(float64(total) / float64(perPage)))
-	if totalPages > 0 && page > totalPages {
-		page = totalPages
-	}
-	offset := (page - 1) * perPage
-
-	posts, err := s.store.GetPostsByTagSlug(ctx, slug, offset, perPage)
-	if err != nil {
-		return nil, err
+	hasNext = len(posts) > limit
+	if hasNext {
+		posts = posts[:limit]
 	}
 
 	for i := range posts {
 		posts[i].Summary = s.generateSummary(posts[i].Markdown)
 	}
 
-	return &PagedPosts{
-		Posts:      posts,
-		Total:      total,
-		Page:       page,
-		PerPage:    perPage,
-		TotalPages: totalPages,
-		HasNext:    page < totalPages,
-		HasPrev:    page > 1,
+	var nextSlug, prevSlug string
+	if hasNext && len(posts) > 0 {
+		nextSlug = posts[len(posts)-1].Slug
+	}
+	if hasPrev && len(posts) > 0 {
+		prevSlug = posts[0].Slug
+	}
+
+	return &CursorPage{
+		Posts:    posts,
+		HasNext:  hasNext,
+		NextSlug: nextSlug,
+		HasPrev:  hasPrev,
+		PrevSlug: prevSlug,
 	}, nil
 }
 

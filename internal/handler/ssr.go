@@ -3,7 +3,6 @@ package handler
 import (
 	"html/template"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -20,20 +19,13 @@ func NewSSR(svc *service.PostService, tmpl *template.Template) *SSRHandler {
 	return &SSRHandler{svc: svc, tmpl: tmpl}
 }
 
-func parsePage(r *http.Request) int {
-	page, err := strconv.Atoi(r.URL.Query().Get("page"))
-	if err != nil || page < 1 {
-		return 1
-	}
-	return page
-}
-
 const postsPerPage = 10
 
 func (h *SSRHandler) Home(w http.ResponseWriter, r *http.Request) {
-	page := parsePage(r)
+	after := r.URL.Query().Get("after")
+	before := r.URL.Query().Get("before")
 
-	paged, err := h.svc.GetPagedPosts(r.Context(), page, postsPerPage)
+	paged, err := h.svc.GetCursorPosts(r.Context(), after, before, postsPerPage)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -90,8 +82,10 @@ func (h *SSRHandler) Category(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := parsePage(r)
-	paged, err := h.svc.GetPagedPostsByCategorySlug(r.Context(), slug, page, postsPerPage)
+	after := r.URL.Query().Get("after")
+	before := r.URL.Query().Get("before")
+
+	paged, err := h.svc.GetCursorPostsByCategorySlug(r.Context(), slug, after, before, postsPerPage)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -120,8 +114,10 @@ func (h *SSRHandler) Tag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := parsePage(r)
-	paged, err := h.svc.GetPagedPostsByTagSlug(r.Context(), slug, page, postsPerPage)
+	after := r.URL.Query().Get("after")
+	before := r.URL.Query().Get("before")
+
+	paged, err := h.svc.GetCursorPostsByTagSlug(r.Context(), slug, after, before, postsPerPage)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
