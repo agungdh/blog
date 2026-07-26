@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/uptrace/bun"
@@ -320,16 +321,10 @@ func applyFilters(q *bun.SelectQuery, f FilterParams) *bun.SelectQuery {
 	return q
 }
 
+var nonAlphaNum = regexp.MustCompile(`[^a-zA-Z0-9]+`)
+
 func sanitizeFTSQuery(q string) string {
-	q = strings.ReplaceAll(q, `"`, "")
-	q = strings.ReplaceAll(q, "'", "")
-	q = strings.ReplaceAll(q, "+", " ")
-	q = strings.ReplaceAll(q, "-", " ")
-	q = strings.ReplaceAll(q, "*", " ")
-	q = strings.ReplaceAll(q, "(", " ")
-	q = strings.ReplaceAll(q, ")", " ")
-	q = strings.ReplaceAll(q, "/", " ")
-	return strings.Join(strings.Fields(q), " ")
+	return strings.TrimSpace(nonAlphaNum.ReplaceAllString(q, " "))
 }
 
 func toFTSQuery(input string) string {
