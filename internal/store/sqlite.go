@@ -3,7 +3,6 @@ package store
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/uptrace/bun"
 
@@ -246,7 +245,7 @@ func (s *Store) GetFilteredPosts(ctx context.Context, filter FilterParams, limit
 
 func applyFilters(q *bun.SelectQuery, f FilterParams) *bun.SelectQuery {
 	if f.Search != "" {
-		q = q.Where("post.title LIKE ?", "%"+strings.ReplaceAll(f.Search, "%", "\\%")+"%")
+		q = q.Where("post.id IN (SELECT rowid FROM posts_fts WHERE posts_fts MATCH ?)", f.Search)
 	}
 	if f.Category != "" {
 		q = q.Where("category_id IN (SELECT id FROM categories WHERE slug = ?)", f.Category)

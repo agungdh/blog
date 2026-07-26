@@ -1,0 +1,27 @@
+-- +goose Up
+-- +goose StatementBegin
+CREATE VIRTUAL TABLE posts_fts USING fts5(title, content, content='posts', content_rowid='id');
+INSERT INTO posts_fts(rowid, title, content) SELECT id, title, markdown FROM posts;
+-- +goose StatementEnd
+-- +goose StatementBegin
+CREATE TRIGGER posts_ai AFTER INSERT ON posts BEGIN
+  INSERT INTO posts_fts(rowid, title, content) VALUES (new.id, new.title, new.markdown);
+END;
+-- +goose StatementEnd
+-- +goose StatementBegin
+CREATE TRIGGER posts_ad AFTER DELETE ON posts BEGIN
+  INSERT INTO posts_fts(posts_fts, rowid, title, content) VALUES('delete', old.id, old.title, old.markdown);
+END;
+-- +goose StatementEnd
+-- +goose StatementBegin
+CREATE TRIGGER posts_au AFTER UPDATE ON posts BEGIN
+  INSERT INTO posts_fts(posts_fts, rowid, title, content) VALUES('delete', old.id, old.title, old.markdown);
+  INSERT INTO posts_fts(rowid, title, content) VALUES (new.id, new.title, new.markdown);
+END;
+-- +goose StatementEnd
+
+-- +goose Down
+DROP TRIGGER IF EXISTS posts_au;
+DROP TRIGGER IF EXISTS posts_ad;
+DROP TRIGGER IF EXISTS posts_ai;
+DROP TABLE IF EXISTS posts_fts;
