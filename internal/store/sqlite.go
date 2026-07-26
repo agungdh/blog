@@ -154,7 +154,7 @@ func (s *Store) SearchCategories(ctx context.Context, query string, limit int) (
 	var categories []model.Category
 	q := s.db.NewSelect().Model(&categories).Order("name").Limit(limit)
 	if query != "" {
-		q = q.Where("name LIKE ?", "%"+query+"%")
+		q = q.Where("name LIKE ?", query+"%")
 	}
 	err := q.Scan(ctx)
 	return categories, err
@@ -193,7 +193,7 @@ func (s *Store) SearchTags(ctx context.Context, query string, limit int) ([]mode
 	var tags []model.Tag
 	q := s.db.NewSelect().Model(&tags).Order("name").Limit(limit)
 	if query != "" {
-		q = q.Where("name LIKE ?", "%"+query+"%")
+		q = q.Where("name LIKE ?", query+"%")
 	}
 	err := q.Scan(ctx)
 	return tags, err
