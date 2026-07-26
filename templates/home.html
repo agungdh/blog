@@ -1,38 +1,50 @@
 {{template "head" .}}
-{{if .PageHeader}}<h1 class="page-title">{{.PageHeader}}</h1>{{else}}<h1 class="page-title">Posts</h1>{{end}}
 {{if .Filter}}
-<form class="filter-form" method="GET">
-    <div class="filter-row">
-        <input type="text" name="q" class="filter-search" placeholder="Search title..." value="{{.Filter.Search}}">
-    </div>
-    {{if not .PageHeader}}
-    <div class="filter-row">
-        <select name="category" class="filter-select">
-            <option value="">All Categories</option>
-            {{range .AllCategories}}<option value="{{.Slug}}"{{if eq .Slug $.Filter.Category}} selected{{end}}>{{.Name}}</option>{{end}}
-        </select>
-        <input type="date" name="from" class="filter-date" value="{{.Filter.DateFrom}}" placeholder="From date">
-        <input type="date" name="to" class="filter-date" value="{{.Filter.DateTo}}" placeholder="To date">
-    </div>
-    {{end}}
-    {{if .AllTags}}
-    <details class="filter-tags-details">
-        <summary>Tags{{if .Filter.Tags}} ({{len .Filter.Tags}} selected){{end}}</summary>
-        <div class="filter-tags">
-            {{range .AllTags}}
-            <label class="filter-tag-label">
-                <input type="checkbox" name="tags" value="{{.Slug}}"{{if contains $.Filter.Tags .Slug}} checked{{end}}> {{.Name}}
-            </label>
-            {{end}}
+<aside class="sidebar">
+    <form class="filter-form" method="GET">
+        <h3 class="filter-title">Filters</h3>
+        <div class="filter-group">
+            <label class="filter-label">Search</label>
+            <input type="text" name="q" class="filter-input" placeholder="Search title..." value="{{.Filter.Search}}">
         </div>
-    </details>
-    {{end}}
-    <div class="filter-actions">
-        <button type="submit" class="btn btn-primary">Filter</button>
-        <a href="{{if .PageHeader}}.{{else}}.{{end}}" class="btn btn-ghost">Clear</a>
-    </div>
-</form>
+        {{if not .PageHeader}}
+        <div class="filter-group">
+            <label class="filter-label">Category</label>
+            <select name="category" class="filter-input">
+                <option value="">All</option>
+                {{range .AllCategories}}<option value="{{.Slug}}"{{if eq .Slug $.Filter.Category}} selected{{end}}>{{.Name}}</option>{{end}}
+            </select>
+        </div>
+        {{end}}
+        <div class="filter-group">
+            <label class="filter-label">Date range</label>
+            <div class="filter-dates">
+                <input type="date" name="from" class="filter-input" value="{{.Filter.DateFrom}}">
+                <span class="filter-date-sep">to</span>
+                <input type="date" name="to" class="filter-input" value="{{.Filter.DateTo}}">
+            </div>
+        </div>
+        {{if .AllTags}}
+        <details class="filter-group filter-tags-details">
+            <summary class="filter-label filter-summary">Tags {{if .Filter.Tags}}<span class="filter-badge">{{len .Filter.Tags}}</span>{{end}}</summary>
+            <div class="filter-tags">
+                {{range .AllTags}}
+                <label class="filter-tag-label">
+                    <input type="checkbox" name="tags" value="{{.Slug}}"{{if contains $.Filter.Tags .Slug}} checked{{end}}> {{.Name}}
+                </label>
+                {{end}}
+            </div>
+        </details>
+        {{end}}
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="{{if .PageHeader}}.{{else}}.{{end}}" class="btn btn-ghost">Clear</a>
+        </div>
+    </form>
+</aside>
 {{end}}
+<div class="content-area{{if not .Filter}} content-full{{end}}">
+{{if .PageHeader}}<h1 class="page-title">{{.PageHeader}}</h1>{{else}}<h1 class="page-title">Posts</h1>{{end}}
 {{range .Posts}}
 <article class="post-card">
     <h2><a href="/posts/{{.Slug}}">{{.Title}}</a></h2>
@@ -55,4 +67,5 @@
 <div id="load-more" data-api="{{.ApiPath}}" data-after="{{.Pagination.NextSlug}}" data-filter="{{.FilterParams}}"></div>
 {{end}}
 {{end}}
+</div>
 {{template "foot" .}}

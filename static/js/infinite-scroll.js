@@ -2,7 +2,8 @@
 	var sentinel = document.getElementById('load-more');
 	if (!sentinel) return;
 
-	var container = document.querySelector('.container');
+	var container = document.querySelector('.content-area');
+	if (!container) container = document.querySelector('.container');
 	if (!container) return;
 
 	var loading = false;

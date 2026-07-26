@@ -1,8 +1,10 @@
 {{template "head" .}}
+<div class="content-area content-full">
 <h1 class="page-title">Tags</h1>
 <div class="tag-cloud">
 {{range .Tags}}
     <a href="/tags/{{.Slug}}" class="tag-pill">{{.Name}}</a>
 {{end}}
+</div>
 </div>
 {{template "foot" .}}
