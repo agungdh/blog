@@ -128,6 +128,10 @@ func main() {
 	r.Get("/api/categories/{slug}/posts", ssr.APICategoryPosts)
 	r.Get("/api/tags/{slug}/posts", ssr.APITagPosts)
 
+	if os.Getenv("AI_ENABLED") == "true" {
+		startGenerator(st)
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -194,4 +198,35 @@ func seedData(ctx context.Context, st *store.Store) {
 		}
 	}
 	log.Printf("seeded %d posts, %d categories, %d tags", len(samplePosts), len(categories), len(tags))
+}
+
+func startGenerator(st *store.Store) {
+	baseURL := os.Getenv("AI_BASE_URL")
+	apiKey := os.Getenv("AI_API_KEY")
+	model := os.Getenv("AI_MODEL")
+	if baseURL == "" || apiKey == "" || model == "" {
+		log.Printf("generator: AI_* env vars not set, generator disabled")
+		return
+	}
+
+	intervalStr := os.Getenv("AI_INTERVAL")
+	interval, err := time.ParseDuration(intervalStr)
+	if err != nil {
+		interval = 1 * time.Hour
+	}
+
+	aiClient := service.NewAIClient(baseURL, apiKey, model)
+	gen := service.NewPostGenerator(aiClient, st)
+
+	log.Printf("generator: enabled, interval=%v, model=%s", interval, model)
+
+	go func() {
+		ctx := context.Background()
+		gen.Generate(ctx)
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		for range ticker.C {
+			gen.Generate(ctx)
+		}
+	}()
 }

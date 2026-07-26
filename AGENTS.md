@@ -8,7 +8,8 @@ PORT=8080 DB_PATH=blog.db ./blog
 ```
 
 - Set `PORT` env (default `8080`), `DB_PATH` env (default `blog.db`)
-- No Makefile, no Dockerfile, no code generation
+- AI-powered post generator: set `AI_ENABLED=true` and configure `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`, `AI_INTERVAL` (e.g. `1h`, `30m`)
+- No code generation
 
 ## Architecture
 

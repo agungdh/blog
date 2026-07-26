@@ -51,6 +51,15 @@ func (s *Store) CountPosts(ctx context.Context) (int, error) {
 	return count, err
 }
 
+func (s *Store) GetAllPostTitles(ctx context.Context) ([]string, error) {
+	var titles []string
+	err := s.db.NewSelect().
+		Model((*model.Post)(nil)).
+		Column("title").
+		Scan(ctx, &titles)
+	return titles, err
+}
+
 func (s *Store) GetPostBySlug(ctx context.Context, slug string) (*model.Post, error) {
 	var post model.Post
 	err := s.db.NewSelect().
