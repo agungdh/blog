@@ -25,14 +25,11 @@ func NewSSR(svc *service.PostService, tmpl *template.Template) *SSRHandler {
 const postsPerPage = 10
 
 func parseFilterParams(r *http.Request) store.FilterParams {
-	tagsRaw := r.URL.Query().Get("tags")
 	var tags []string
-	if tagsRaw != "" {
-		for _, t := range strings.Split(tagsRaw, ",") {
-			t = strings.TrimSpace(t)
-			if t != "" {
-				tags = append(tags, t)
-			}
+	for _, t := range r.URL.Query()["tags"] {
+		t = strings.TrimSpace(t)
+		if t != "" {
+			tags = append(tags, t)
 		}
 	}
 	return store.FilterParams{
@@ -53,7 +50,9 @@ func filterQueryParams(f store.FilterParams) string {
 		parts = append(parts, "category="+template.URLQueryEscaper(f.Category))
 	}
 	if len(f.Tags) > 0 {
-		parts = append(parts, "tags="+template.URLQueryEscaper(strings.Join(f.Tags, ",")))
+		for _, t := range f.Tags {
+			parts = append(parts, "tags="+template.URLQueryEscaper(t))
+		}
 	}
 	if f.DateFrom != "" {
 		parts = append(parts, "from="+template.URLQueryEscaper(f.DateFrom))
@@ -290,6 +289,8 @@ func (h *SSRHandler) Tag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tags, _ := h.svc.GetAllTags(r.Context())
+
 	data := map[string]any{
 		"Title":        tag.Name + " - My Blog",
 		"Posts":        paged.Posts,
@@ -298,6 +299,7 @@ func (h *SSRHandler) Tag(w http.ResponseWriter, r *http.Request) {
 		"ApiPath":      "/api/tags/" + slug + "/posts",
 		"Filter":       filter,
 		"FilterParams": filterQueryParams(filter),
+		"AllTags":      tags,
 		"Year":         time.Now().Year(),
 	}
 
