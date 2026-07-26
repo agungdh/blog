@@ -13,7 +13,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	goose "github.com/pressly/goose/v3"
+	"github.com/pressly/goose/v3"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/sqlitedialect"
 	_ "modernc.org/sqlite"
@@ -43,7 +43,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to open database: %v", err)
 	}
-	defer sqldb.Close()
+	defer func() { _ = sqldb.Close() }()
 
 	pragmas := []string{
 		"PRAGMA journal_mode=WAL",
@@ -71,7 +71,7 @@ func main() {
 	}
 
 	db := bun.NewDB(sqldb, sqlitedialect.New())
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	st := store.New(db)
 
@@ -90,7 +90,7 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Use(middleware.RealIP)
+	r.Use(middleware.ClientIPFromRemoteAddr)
 
 	staticSub, err := fs.Sub(staticFS, "static")
 	if err != nil {

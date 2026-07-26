@@ -31,7 +31,7 @@ main.go
 ## Routes
 
 | Path | Handler |
-|---|---|
+|------|--------|
 | `/` | Home — all posts |
 | `/posts/{slug}` | Single post |
 | `/categories/{slug}` | Posts by category |
