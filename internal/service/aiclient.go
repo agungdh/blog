@@ -37,7 +37,7 @@ func NewAIClient(baseURL, apiKey, model string) *AIClient {
 		apiKey:  apiKey,
 		model:   model,
 		httpClient: &http.Client{
-			Timeout: 120 * time.Second,
+			Timeout: 5 * time.Minute,
 		},
 	}
 }
