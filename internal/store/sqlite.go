@@ -300,7 +300,10 @@ func (s *Store) GetFilteredPosts(ctx context.Context, filter FilterParams, limit
 
 func applyFilters(q *bun.SelectQuery, f FilterParams) *bun.SelectQuery {
 	if f.Search != "" {
-		q = q.Where("post.id IN (SELECT rowid FROM posts_fts WHERE posts_fts MATCH ?)", sanitizeFTSQuery(f.Search))
+		sq := sanitizeFTSQuery(f.Search)
+		if sq != "" {
+			q = q.Where("post.id IN (SELECT rowid FROM posts_fts WHERE posts_fts MATCH ?)", sq)
+		}
 	}
 	if f.Category != "" {
 		q = q.Where("category_id IN (SELECT id FROM categories WHERE slug = ?)", f.Category)
@@ -319,6 +322,7 @@ func applyFilters(q *bun.SelectQuery, f FilterParams) *bun.SelectQuery {
 
 func sanitizeFTSQuery(q string) string {
 	q = strings.ReplaceAll(q, `"`, "")
+	q = strings.ReplaceAll(q, "'", "")
 	q = strings.ReplaceAll(q, "+", " ")
 	q = strings.ReplaceAll(q, "-", " ")
 	q = strings.ReplaceAll(q, "*", " ")
