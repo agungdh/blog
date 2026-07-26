@@ -4,6 +4,20 @@
         <p>&copy; {{.Year}} My Blog &mdash; Powered by Go</p>
     </footer>
     <script src="/static/js/infinite-scroll.js"></script>
+    <script>
+        (function(){
+            var btn=document.getElementById('theme-toggle');
+            var isDark=document.documentElement.className==='dark';
+            updateIcon();
+            btn.addEventListener('click',function(){
+                isDark=!isDark;
+                document.documentElement.className=isDark?'dark':'';
+                localStorage.setItem('theme',isDark?'dark':'light');
+                updateIcon();
+            });
+            function updateIcon(){btn.textContent=isDark?'\u263E':'\u2600'}
+        })()
+    </script>
 </body>
 </html>
 {{end}}
