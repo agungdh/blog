@@ -151,12 +151,20 @@ func (s *Store) GetAllCategories(ctx context.Context) ([]model.Category, error) 
 }
 
 func (s *Store) SearchCategories(ctx context.Context, query string, limit int) ([]model.Category, error) {
-	var categories []model.Category
-	q := s.db.NewSelect().Model(&categories).Order("name").Limit(limit)
-	if query != "" {
-		q = q.Where("name LIKE ?", query+"%")
+	if query == "" {
+		return nil, nil
 	}
-	err := q.Scan(ctx)
+	ftsQuery := toFTSQuery(query)
+	if ftsQuery == "" {
+		return nil, nil
+	}
+	var categories []model.Category
+	err := s.db.NewSelect().
+		Model(&categories).
+		Where("id IN (SELECT rowid FROM categories_fts WHERE categories_fts MATCH ?)", ftsQuery).
+		Order("name").
+		Limit(limit).
+		Scan(ctx)
 	return categories, err
 }
 
@@ -190,12 +198,20 @@ func (s *Store) GetAllTags(ctx context.Context) ([]model.Tag, error) {
 }
 
 func (s *Store) SearchTags(ctx context.Context, query string, limit int) ([]model.Tag, error) {
-	var tags []model.Tag
-	q := s.db.NewSelect().Model(&tags).Order("name").Limit(limit)
-	if query != "" {
-		q = q.Where("name LIKE ?", query+"%")
+	if query == "" {
+		return nil, nil
 	}
-	err := q.Scan(ctx)
+	ftsQuery := toFTSQuery(query)
+	if ftsQuery == "" {
+		return nil, nil
+	}
+	var tags []model.Tag
+	err := s.db.NewSelect().
+		Model(&tags).
+		Where("id IN (SELECT rowid FROM tags_fts WHERE tags_fts MATCH ?)", ftsQuery).
+		Order("name").
+		Limit(limit).
+		Scan(ctx)
 	return tags, err
 }
 
@@ -310,6 +326,18 @@ func sanitizeFTSQuery(q string) string {
 	q = strings.ReplaceAll(q, ")", " ")
 	q = strings.ReplaceAll(q, "/", " ")
 	return strings.Join(strings.Fields(q), " ")
+}
+
+func toFTSQuery(input string) string {
+	q := sanitizeFTSQuery(input)
+	words := strings.Fields(q)
+	if len(words) == 0 {
+		return ""
+	}
+	for i, w := range words {
+		words[i] = w + "*"
+	}
+	return strings.Join(words, " ")
 }
 
 func (s *Store) GetPostsByTagSlugAfter(ctx context.Context, tagSlug, postSlug string, limit int) ([]model.Post, error) {
