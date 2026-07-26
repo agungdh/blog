@@ -2,6 +2,8 @@ package store
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/uptrace/bun"
 
@@ -10,6 +12,18 @@ import (
 
 type Store struct {
 	db *bun.DB
+}
+
+type FilterParams struct {
+	Search   string
+	Category string
+	Tags     []string
+	DateFrom string
+	DateTo   string
+}
+
+func (f FilterParams) HasFilter() bool {
+	return f.Search != "" || f.Category != "" || len(f.Tags) > 0 || f.DateFrom != "" || f.DateTo != ""
 }
 
 func New(db *bun.DB) *Store {
@@ -207,6 +221,46 @@ func (s *Store) GetLatestPostsByTagSlug(ctx context.Context, slug string, limit 
 		Limit(limit).
 		Scan(ctx)
 	return posts, err
+}
+
+func (s *Store) GetFilteredPosts(ctx context.Context, filter FilterParams, limit int, afterSlug string) ([]model.Post, error) {
+	var posts []model.Post
+	q := s.db.NewSelect().
+		Model(&posts).
+		Relation("Category").
+		Relation("Tags")
+
+	q = applyFilters(q, filter)
+
+	if afterSlug != "" {
+		cursor, err := s.GetPostBySlug(ctx, afterSlug)
+		if err != nil {
+			return nil, fmt.Errorf("cursor post: %w", err)
+		}
+		q = q.Where("(post.date < ? OR (post.date = ? AND post.id < ?))", cursor.Date, cursor.Date, cursor.ID)
+	}
+
+	err := q.Order("post.date DESC", "post.id DESC").Limit(limit).Scan(ctx)
+	return posts, err
+}
+
+func applyFilters(q *bun.SelectQuery, f FilterParams) *bun.SelectQuery {
+	if f.Search != "" {
+		q = q.Where("post.title LIKE ?", "%"+strings.ReplaceAll(f.Search, "%", "\\%")+"%")
+	}
+	if f.Category != "" {
+		q = q.Where("category_id IN (SELECT id FROM categories WHERE slug = ?)", f.Category)
+	}
+	for _, tag := range f.Tags {
+		q = q.Where("post.id IN (SELECT pt.post_id FROM post_tags pt JOIN tags t ON t.id = pt.tag_id WHERE t.slug = ?)", tag)
+	}
+	if f.DateFrom != "" {
+		q = q.Where("post.date >= ?", f.DateFrom)
+	}
+	if f.DateTo != "" {
+		q = q.Where("post.date <= ?", f.DateTo)
+	}
+	return q
 }
 
 func (s *Store) GetPostsByTagSlugAfter(ctx context.Context, tagSlug, postSlug string, limit int) ([]model.Post, error) {

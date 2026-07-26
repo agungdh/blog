@@ -82,7 +82,17 @@ func main() {
 
 	svc := service.New(st)
 
-	tmpl, err := template.ParseFS(templatesFS, "templates/*.html")
+	tmpl := template.New("").Funcs(template.FuncMap{
+		"contains": func(slice []string, item string) bool {
+			for _, s := range slice {
+				if s == item {
+					return true
+				}
+			}
+			return false
+		},
+	})
+	tmpl, err = tmpl.ParseFS(templatesFS, "templates/*.html")
 	if err != nil {
 		log.Fatalf("failed to parse templates: %v", err)
 	}
@@ -120,7 +130,9 @@ func main() {
 
 	r.Get("/", ssr.Home)
 	r.Get("/posts/{slug}", ssr.Post)
+	r.Get("/categories", ssr.Categories)
 	r.Get("/categories/{slug}", ssr.Category)
+	r.Get("/tags", ssr.Tags)
 	r.Get("/tags/{slug}", ssr.Tag)
 
 	r.Get("/api/posts", ssr.APIPosts)

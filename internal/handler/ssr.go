@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"html/template"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 
 	"blog/internal/service"
+	"blog/internal/store"
 )
 
 type SSRHandler struct {
@@ -22,21 +24,78 @@ func NewSSR(svc *service.PostService, tmpl *template.Template) *SSRHandler {
 
 const postsPerPage = 10
 
+func parseFilterParams(r *http.Request) store.FilterParams {
+	tagsRaw := r.URL.Query().Get("tags")
+	var tags []string
+	if tagsRaw != "" {
+		for _, t := range strings.Split(tagsRaw, ",") {
+			t = strings.TrimSpace(t)
+			if t != "" {
+				tags = append(tags, t)
+			}
+		}
+	}
+	return store.FilterParams{
+		Search:   r.URL.Query().Get("q"),
+		Category: r.URL.Query().Get("category"),
+		Tags:     tags,
+		DateFrom: r.URL.Query().Get("from"),
+		DateTo:   r.URL.Query().Get("to"),
+	}
+}
+
+func filterQueryParams(f store.FilterParams) string {
+	var parts []string
+	if f.Search != "" {
+		parts = append(parts, "q="+template.URLQueryEscaper(f.Search))
+	}
+	if f.Category != "" {
+		parts = append(parts, "category="+template.URLQueryEscaper(f.Category))
+	}
+	if len(f.Tags) > 0 {
+		parts = append(parts, "tags="+template.URLQueryEscaper(strings.Join(f.Tags, ",")))
+	}
+	if f.DateFrom != "" {
+		parts = append(parts, "from="+template.URLQueryEscaper(f.DateFrom))
+	}
+	if f.DateTo != "" {
+		parts = append(parts, "to="+template.URLQueryEscaper(f.DateTo))
+	}
+	if len(parts) == 0 {
+		return ""
+	}
+	return "&" + strings.Join(parts, "&")
+}
+
 func (h *SSRHandler) Home(w http.ResponseWriter, r *http.Request) {
+	filter := parseFilterParams(r)
 	after := r.URL.Query().Get("after")
 
-	paged, err := h.svc.GetCursorPosts(r.Context(), after, postsPerPage)
+	var paged *service.CursorPage
+	var err error
+	if filter.HasFilter() {
+		paged, err = h.svc.GetCursorPostsFiltered(r.Context(), after, postsPerPage, filter)
+	} else {
+		paged, err = h.svc.GetCursorPosts(r.Context(), after, postsPerPage)
+	}
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
+	categories, _ := h.svc.GetAllCategories(r.Context())
+	tags, _ := h.svc.GetAllTags(r.Context())
+
 	data := map[string]any{
-		"Title":      "My Blog",
-		"Posts":      paged.Posts,
-		"Pagination": paged,
-		"ApiPath":    "/api/posts",
-		"Year":       time.Now().Year(),
+		"Title":          "My Blog",
+		"Posts":          paged.Posts,
+		"Pagination":     paged,
+		"ApiPath":        "/api/posts",
+		"Filter":         filter,
+		"FilterParams":   filterQueryParams(filter),
+		"AllCategories":  categories,
+		"AllTags":        tags,
+		"Year":           time.Now().Year(),
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -46,8 +105,16 @@ func (h *SSRHandler) Home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SSRHandler) APIPosts(w http.ResponseWriter, r *http.Request) {
+	filter := parseFilterParams(r)
 	after := r.URL.Query().Get("after")
-	paged, err := h.svc.GetCursorPosts(r.Context(), after, postsPerPage)
+
+	var paged *service.CursorPage
+	var err error
+	if filter.HasFilter() {
+		paged, err = h.svc.GetCursorPostsFiltered(r.Context(), after, postsPerPage, filter)
+	} else {
+		paged, err = h.svc.GetCursorPosts(r.Context(), after, postsPerPage)
+	}
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -57,8 +124,11 @@ func (h *SSRHandler) APIPosts(w http.ResponseWriter, r *http.Request) {
 
 func (h *SSRHandler) APICategoryPosts(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
+	filter := parseFilterParams(r)
+	filter.Category = slug
 	after := r.URL.Query().Get("after")
-	paged, err := h.svc.GetCursorPostsByCategorySlug(r.Context(), slug, after, postsPerPage)
+
+	paged, err := h.svc.GetCursorPostsFiltered(r.Context(), after, postsPerPage, filter)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -68,8 +138,13 @@ func (h *SSRHandler) APICategoryPosts(w http.ResponseWriter, r *http.Request) {
 
 func (h *SSRHandler) APITagPosts(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
+	filter := parseFilterParams(r)
+	if !contains(filter.Tags, slug) {
+		filter.Tags = append(filter.Tags, slug)
+	}
 	after := r.URL.Query().Get("after")
-	paged, err := h.svc.GetCursorPostsByTagSlug(r.Context(), slug, after, postsPerPage)
+
+	paged, err := h.svc.GetCursorPostsFiltered(r.Context(), after, postsPerPage, filter)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -164,21 +239,28 @@ func (h *SSRHandler) Category(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	filter := parseFilterParams(r)
+	filter.Category = slug
 	after := r.URL.Query().Get("after")
 
-	paged, err := h.svc.GetCursorPostsByCategorySlug(r.Context(), slug, after, postsPerPage)
+	paged, err := h.svc.GetCursorPostsFiltered(r.Context(), after, postsPerPage, filter)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
+	tags, _ := h.svc.GetAllTags(r.Context())
+
 	data := map[string]any{
-		"Title":      category.Name + " - My Blog",
-		"Posts":      paged.Posts,
-		"PageHeader": "Category: " + category.Name,
-		"Pagination": paged,
-		"ApiPath":    "/api/categories/" + slug + "/posts",
-		"Year":       time.Now().Year(),
+		"Title":        category.Name + " - My Blog",
+		"Posts":        paged.Posts,
+		"PageHeader":   "Category: " + category.Name,
+		"Pagination":   paged,
+		"ApiPath":      "/api/categories/" + slug + "/posts",
+		"Filter":       filter,
+		"FilterParams": filterQueryParams(filter),
+		"AllTags":      tags,
+		"Year":         time.Now().Year(),
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -196,25 +278,77 @@ func (h *SSRHandler) Tag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	filter := parseFilterParams(r)
+	if !contains(filter.Tags, slug) {
+		filter.Tags = append(filter.Tags, slug)
+	}
 	after := r.URL.Query().Get("after")
 
-	paged, err := h.svc.GetCursorPostsByTagSlug(r.Context(), slug, after, postsPerPage)
+	paged, err := h.svc.GetCursorPostsFiltered(r.Context(), after, postsPerPage, filter)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
 	data := map[string]any{
-		"Title":      tag.Name + " - My Blog",
-		"Posts":      paged.Posts,
-		"PageHeader": "Tag: " + tag.Name,
-		"Pagination": paged,
-		"ApiPath":    "/api/tags/" + slug + "/posts",
-		"Year":       time.Now().Year(),
+		"Title":        tag.Name + " - My Blog",
+		"Posts":        paged.Posts,
+		"PageHeader":   "Tag: " + tag.Name,
+		"Pagination":   paged,
+		"ApiPath":      "/api/tags/" + slug + "/posts",
+		"Filter":       filter,
+		"FilterParams": filterQueryParams(filter),
+		"Year":         time.Now().Year(),
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if err := h.tmpl.ExecuteTemplate(w, "home.html", data); err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
+}
+
+func (h *SSRHandler) Categories(w http.ResponseWriter, r *http.Request) {
+	categories, err := h.svc.GetAllCategories(r.Context())
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	data := map[string]any{
+		"Title":      "Categories - My Blog",
+		"Categories": categories,
+		"Year":       time.Now().Year(),
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err := h.tmpl.ExecuteTemplate(w, "categories.html", data); err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+func (h *SSRHandler) Tags(w http.ResponseWriter, r *http.Request) {
+	tags, err := h.svc.GetAllTags(r.Context())
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	data := map[string]any{
+		"Title": "Tags - My Blog",
+		"Tags":  tags,
+		"Year":  time.Now().Year(),
+	}
+
+	if err := h.tmpl.ExecuteTemplate(w, "tags.html", data); err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
 }

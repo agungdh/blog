@@ -1,0 +1,8 @@
+{{template "head" .}}
+<h1 class="page-title">Categories</h1>
+<div class="category-list">
+{{range .Categories}}
+    <a href="/categories/{{.Slug}}" class="category-card">{{.Name}}</a>
+{{end}}
+</div>
+{{template "foot" .}}

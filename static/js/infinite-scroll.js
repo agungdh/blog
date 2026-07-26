@@ -18,12 +18,13 @@
 	function loadMore() {
 		var slug = sentinel.getAttribute('data-after');
 		var api = sentinel.getAttribute('data-api');
+		var filter = sentinel.getAttribute('data-filter') || '';
 		if (!slug || !api) return;
 
 		loading = true;
 		sentinel.className = 'loading';
 
-		var url = api + '?after=' + encodeURIComponent(slug);
+		var url = api + '?after=' + encodeURIComponent(slug) + filter;
 
 		fetch(url)
 			.then(function (res) { return res.json(); })

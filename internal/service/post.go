@@ -63,6 +63,33 @@ func (s *PostService) GetCursorPosts(ctx context.Context, after string, limit in
 	}, nil
 }
 
+func (s *PostService) GetCursorPostsFiltered(ctx context.Context, after string, limit int, filter store.FilterParams) (*CursorPage, error) {
+	posts, err := s.store.GetFilteredPosts(ctx, filter, limit+1, after)
+	if err != nil {
+		return nil, err
+	}
+
+	hasNext := len(posts) > limit
+	if hasNext {
+		posts = posts[:limit]
+	}
+
+	for i := range posts {
+		posts[i].Summary = s.generateSummary(posts[i].Markdown)
+	}
+
+	var nextSlug string
+	if hasNext && len(posts) > 0 {
+		nextSlug = posts[len(posts)-1].Slug
+	}
+
+	return &CursorPage{
+		Posts:    posts,
+		HasNext:  hasNext,
+		NextSlug: nextSlug,
+	}, nil
+}
+
 func (s *PostService) GetPostBySlug(ctx context.Context, slug string) (*model.Post, error) {
 	return s.store.GetPostBySlug(ctx, slug)
 }
@@ -159,8 +186,16 @@ func (s *PostService) GetCategoryBySlug(ctx context.Context, slug string) (*mode
 	return s.store.GetCategoryBySlug(ctx, slug)
 }
 
+func (s *PostService) GetAllCategories(ctx context.Context) ([]model.Category, error) {
+	return s.store.GetAllCategories(ctx)
+}
+
 func (s *PostService) GetTagBySlug(ctx context.Context, slug string) (*model.Tag, error) {
 	return s.store.GetTagBySlug(ctx, slug)
+}
+
+func (s *PostService) GetAllTags(ctx context.Context) ([]model.Tag, error) {
+	return s.store.GetAllTags(ctx)
 }
 
 func (s *PostService) generateSummary(markdown string) string {
