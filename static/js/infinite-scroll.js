@@ -2,8 +2,7 @@
 	var sentinel = document.getElementById('load-more');
 	if (!sentinel) return;
 
-	var container = document.querySelector('.content-area');
-	if (!container) container = document.querySelector('.container');
+	var container = sentinel.parentNode;
 	if (!container) return;
 
 	var loading = false;
@@ -28,26 +27,36 @@
 		var url = api + '?after=' + encodeURIComponent(slug) + filter;
 
 		fetch(url)
-			.then(function (res) { return res.json(); })
+			.then(function (res) {
+				if (!res.ok) throw new Error('HTTP ' + res.status);
+				return res.json();
+			})
 			.then(function (data) {
+				if (!data.posts) return;
+
+				var frag = document.createDocumentFragment();
 				data.posts.forEach(function (p) {
-					container.insertBefore(buildCard(p), sentinel);
+					frag.appendChild(buildCard(p));
 				});
+
+				sentinel.before(frag);
 
 				if (data.has_next) {
 					sentinel.setAttribute('data-after', data.next_slug);
-					sentinel.className = '';
-					loading = false;
-					observer.unobserve(sentinel);
-					observer.observe(sentinel);
 				} else {
 					sentinel.remove();
 					observer.disconnect();
 				}
 			})
-			.catch(function () {
+			.catch(function (err) {
+				console.error(err);
 				sentinel.className = 'error';
+			})
+			.finally(function () {
+				sentinel.classList.remove('loading');
 				loading = false;
+				observer.unobserve(sentinel);
+				if (sentinel.parentNode) observer.observe(sentinel);
 			});
 	}
 
