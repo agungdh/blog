@@ -18,9 +18,8 @@
 <p class="empty">No posts yet.</p>
 {{end}}
 {{if .Pagination}}
-<nav class="pagination">
-    {{if .Pagination.HasPrev}}<a href="?before={{.Pagination.PrevSlug}}" rel="prev">&larr; Newer posts</a>{{end}}
-    {{if .Pagination.HasNext}}<a href="?after={{.Pagination.NextSlug}}" rel="next">Older posts &rarr;</a>{{end}}
-</nav>
+{{if .Pagination.HasNext}}
+<div id="load-more" data-after="{{.Pagination.NextSlug}}"></div>
+{{end}}
 {{end}}
 {{template "foot" .}}

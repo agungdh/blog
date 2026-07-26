@@ -23,9 +23,8 @@ const postsPerPage = 10
 
 func (h *SSRHandler) Home(w http.ResponseWriter, r *http.Request) {
 	after := r.URL.Query().Get("after")
-	before := r.URL.Query().Get("before")
 
-	paged, err := h.svc.GetCursorPosts(r.Context(), after, before, postsPerPage)
+	paged, err := h.svc.GetCursorPosts(r.Context(), after, postsPerPage)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -83,9 +82,8 @@ func (h *SSRHandler) Category(w http.ResponseWriter, r *http.Request) {
 	}
 
 	after := r.URL.Query().Get("after")
-	before := r.URL.Query().Get("before")
 
-	paged, err := h.svc.GetCursorPostsByCategorySlug(r.Context(), slug, after, before, postsPerPage)
+	paged, err := h.svc.GetCursorPostsByCategorySlug(r.Context(), slug, after, postsPerPage)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -115,9 +113,8 @@ func (h *SSRHandler) Tag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	after := r.URL.Query().Get("after")
-	before := r.URL.Query().Get("before")
 
-	paged, err := h.svc.GetCursorPostsByTagSlug(r.Context(), slug, after, before, postsPerPage)
+	paged, err := h.svc.GetCursorPostsByTagSlug(r.Context(), slug, after, postsPerPage)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return

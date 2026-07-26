@@ -46,23 +46,6 @@ func (s *Store) GetPostsAfter(ctx context.Context, slug string, limit int) ([]mo
 	return posts, err
 }
 
-func (s *Store) GetPostsBefore(ctx context.Context, slug string, limit int) ([]model.Post, error) {
-	cursor, err := s.GetPostBySlug(ctx, slug)
-	if err != nil {
-		return nil, err
-	}
-	var posts []model.Post
-	err = s.db.NewSelect().
-		Model(&posts).
-		Relation("Category").
-		Relation("Tags").
-	Where("(post.date > ? OR (post.date = ? AND post.id > ?))", cursor.Date, cursor.Date, cursor.ID).
-	Order("post.date ASC", "post.id ASC").
-		Limit(limit).
-		Scan(ctx)
-	return posts, err
-}
-
 func (s *Store) CountPosts(ctx context.Context) (int, error) {
 	count, err := s.db.NewSelect().Model((*model.Post)(nil)).Count(ctx)
 	return count, err
@@ -204,24 +187,6 @@ func (s *Store) GetPostsByCategorySlugAfter(ctx context.Context, catSlug, postSl
 	return posts, err
 }
 
-func (s *Store) GetPostsByCategorySlugBefore(ctx context.Context, catSlug, postSlug string, limit int) ([]model.Post, error) {
-	cursor, err := s.GetPostBySlug(ctx, postSlug)
-	if err != nil {
-		return nil, err
-	}
-	var posts []model.Post
-	err = s.db.NewSelect().
-		Model(&posts).
-		Relation("Category").
-		Relation("Tags").
-		Where("category_id IN (SELECT id FROM categories WHERE slug = ?)", catSlug).
-	Where("(post.date > ? OR (post.date = ? AND post.id > ?))", cursor.Date, cursor.Date, cursor.ID).
-	Order("post.date ASC", "post.id ASC").
-		Limit(limit).
-		Scan(ctx)
-	return posts, err
-}
-
 func (s *Store) GetLatestPostsByTagSlug(ctx context.Context, slug string, limit int) ([]model.Post, error) {
 	var posts []model.Post
 	err := s.db.NewSelect().
@@ -248,24 +213,6 @@ func (s *Store) GetPostsByTagSlugAfter(ctx context.Context, tagSlug, postSlug st
 		Where("post.id IN (SELECT pt.post_id FROM post_tags pt JOIN tags t ON t.id = pt.tag_id WHERE t.slug = ?)", tagSlug).
 		Where("(post.date < ? OR (post.date = ? AND post.id < ?))", cursor.Date, cursor.Date, cursor.ID).
 		Order("post.date DESC", "post.id DESC").
-		Limit(limit).
-		Scan(ctx)
-	return posts, err
-}
-
-func (s *Store) GetPostsByTagSlugBefore(ctx context.Context, tagSlug, postSlug string, limit int) ([]model.Post, error) {
-	cursor, err := s.GetPostBySlug(ctx, postSlug)
-	if err != nil {
-		return nil, err
-	}
-	var posts []model.Post
-	err = s.db.NewSelect().
-		Model(&posts).
-		Relation("Category").
-		Relation("Tags").
-		Where("post.id IN (SELECT pt.post_id FROM post_tags pt JOIN tags t ON t.id = pt.tag_id WHERE t.slug = ?)", tagSlug).
-		Where("(post.date > ? OR (post.date = ? AND post.id > ?))", cursor.Date, cursor.Date, cursor.ID).
-		Order("post.date ASC", "post.id ASC").
 		Limit(limit).
 		Scan(ctx)
 	return posts, err
