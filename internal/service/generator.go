@@ -50,28 +50,30 @@ func (g *PostGenerator) Generate(ctx context.Context) {
 		return
 	}
 
-	systemPrompt := `Kamu adalah penulis blog teknologi profesional. Hasilkan SATU artikel blog teknologi baru dalam bahasa Indonesia.
-Format response HARUS JSON saja, tanpa markdown wrapper, tanpa penjelasan. Format:
-
-{
-  "title": "Judul artikel yang SEO-friendly dan menarik",
-  "slug": "judul-artikel-dalam-bahasa-inggris-kebab-case",
-  "content": "Konten artikel dalam format Markdown. Gunakan ## untuk heading, **bold**, daftar, dan code blocks dengan triple backtick. Buat artikel informatif, 500-1000 kata, dengan contoh kode yang relevan.",
-  "excerpt": "Ringkasan 1-3 kalimat dalam bahasa Indonesia",
-  "category": {"name": "Nama Kategori", "slug": "nama-kategori"},
-  "tags": [{"name": "Nama Tag", "slug": "nama-tag"}, ...]
-}
-
-Topik: teknologi modern (web development, cloud, DevOps, programming, AI/ML, cybersecurity, mobile dev, data science).
-Slug harus unik, bahasa Inggris lowercase, kebab-case.
-Gunakan minimal 2 tag.
+	systemPrompt := `You are a professional tech blogger. Generate engaging, informative blog posts about programming, software development, DevOps, AI, cloud computing, cybersecurity, mobile development, or other technology topics.
+Write in markdown format with proper headings, code blocks, and formatting.
+Respond ONLY with a valid JSON object, no other text.
 `
 
-	userPrompt := "Post yang SUDAH ADA (JANGAN buat judul yang sama):\n"
+	userPrompt := "Generate a new tech blog post. Return a JSON object with this exact structure:\n"
+	userPrompt += "{\n"
+	userPrompt += `  "title": "SEO-friendly post title",` + "\n"
+	userPrompt += `  "slug": "post-slug-in-english-kebab-case",` + "\n"
+	userPrompt += `  "content": "Full markdown content with ## headings, **bold**, lists, and triple backtick code blocks. 500-1000 words, informative with relevant code examples.",` + "\n"
+	userPrompt += `  "excerpt": "A short 1-3 sentence summary",` + "\n"
+	userPrompt += `  "category": {"name": "Category Display Name", "slug": "category-slug"},` + "\n"
+	userPrompt += `  "tags": [{"name": "Tag Display Name", "slug": "tag-slug"}, ...]` + "\n"
+	userPrompt += "}\n"
+	userPrompt += "\n"
+	userPrompt += "Rules:\n"
+	userPrompt += "- Slug must be in English, lowercase, use hyphens, no special characters\n"
+	userPrompt += "- Content must be at least 500 words with code examples\n"
+	userPrompt += "- Include at least 2 relevant tags\n"
+	userPrompt += "\n"
+	userPrompt += "IMPORTANT: Generate a post on a COMPLETELY DIFFERENT topic from these existing posts:\n"
 	for _, t := range existing {
 		userPrompt += "- " + t + "\n"
 	}
-	userPrompt += "\nBuat 1 artikel baru yang berbeda dari semua judul di atas."
 
 	raw, err := g.ai.Generate(systemPrompt, userPrompt)
 	if err != nil {
