@@ -80,7 +80,7 @@ func (h *SSRHandler) Home(w http.ResponseWriter, r *http.Request) {
 		paged, err = h.svc.GetCursorPosts(r.Context(), after, postsPerPage)
 	}
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		h.serverError(w, r, err)
 		return
 	}
 
@@ -127,7 +127,7 @@ func (h *SSRHandler) APIPosts(w http.ResponseWriter, r *http.Request) {
 		paged, err = h.svc.GetCursorPosts(r.Context(), after, postsPerPage)
 	}
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		h.serverError(w, r, err)
 		return
 	}
 	writeJSON(w, paged)
@@ -141,7 +141,7 @@ func (h *SSRHandler) APICategoryPosts(w http.ResponseWriter, r *http.Request) {
 
 	paged, err := h.svc.GetCursorPostsFiltered(r.Context(), after, postsPerPage, filter)
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		h.serverError(w, r, err)
 		return
 	}
 	writeJSON(w, paged)
@@ -157,7 +157,7 @@ func (h *SSRHandler) APITagPosts(w http.ResponseWriter, r *http.Request) {
 
 	paged, err := h.svc.GetCursorPostsFiltered(r.Context(), after, postsPerPage, filter)
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		h.serverError(w, r, err)
 		return
 	}
 	writeJSON(w, paged)
@@ -167,7 +167,7 @@ func (h *SSRHandler) APISearchCategories(w http.ResponseWriter, r *http.Request)
 	q := r.URL.Query().Get("q")
 	categories, err := h.svc.SearchCategories(r.Context(), q, 10)
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		h.serverError(w, r, err)
 		return
 	}
 	results := make([]searchResult, len(categories))
@@ -182,7 +182,7 @@ func (h *SSRHandler) APISearchTags(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("q")
 	tags, err := h.svc.SearchTags(r.Context(), q, 10)
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		h.serverError(w, r, err)
 		return
 	}
 	results := make([]searchResult, len(tags))
@@ -258,7 +258,7 @@ func (h *SSRHandler) Post(w http.ResponseWriter, r *http.Request) {
 
 	htmlContent, err := h.svc.RenderMarkdown(post.Markdown)
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		h.serverError(w, r, err)
 		return
 	}
 
@@ -291,7 +291,7 @@ func (h *SSRHandler) Category(w http.ResponseWriter, r *http.Request) {
 
 	paged, err := h.svc.GetCursorPostsFiltered(r.Context(), after, postsPerPage, filter)
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		h.serverError(w, r, err)
 		return
 	}
 
@@ -335,7 +335,7 @@ func (h *SSRHandler) Tag(w http.ResponseWriter, r *http.Request) {
 
 	paged, err := h.svc.GetCursorPostsFiltered(r.Context(), after, postsPerPage, filter)
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		h.serverError(w, r, err)
 		return
 	}
 
@@ -365,7 +365,7 @@ func (h *SSRHandler) Tag(w http.ResponseWriter, r *http.Request) {
 func (h *SSRHandler) Categories(w http.ResponseWriter, r *http.Request) {
 	categories, err := h.svc.GetAllCategories(r.Context())
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		h.serverError(w, r, err)
 		return
 	}
 
@@ -384,7 +384,7 @@ func (h *SSRHandler) Categories(w http.ResponseWriter, r *http.Request) {
 func (h *SSRHandler) Tags(w http.ResponseWriter, r *http.Request) {
 	tags, err := h.svc.GetAllTags(r.Context())
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		h.serverError(w, r, err)
 		return
 	}
 
@@ -407,6 +407,18 @@ func (h *SSRHandler) NotFound(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := h.tmpl.ExecuteTemplate(w, "404.html", data); err != nil {
 		log.Printf("template error (404): %v", err)
+	}
+}
+
+func (h *SSRHandler) serverError(w http.ResponseWriter, r *http.Request, err error) {
+	log.Printf("server error: %s %s: %v", r.Method, r.URL.Path, err)
+	w.WriteHeader(http.StatusInternalServerError)
+	data := map[string]any{
+		"Title": "500 - My Blog",
+		"Year":  time.Now().Year(),
+	}
+	if tmplErr := h.tmpl.ExecuteTemplate(w, "500.html", data); tmplErr != nil {
+		log.Printf("template error (500): %v", tmplErr)
 	}
 }
 
