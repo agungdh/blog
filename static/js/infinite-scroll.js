@@ -32,7 +32,7 @@
 
 				var cards = doc.querySelectorAll('.post-card');
 				cards.forEach(function (card) {
-					container.appendChild(card);
+					container.insertBefore(card, sentinel);
 				});
 
 				var next = doc.getElementById('load-more');
@@ -42,9 +42,12 @@
 				} else {
 					sentinel.remove();
 					observer.disconnect();
+					return;
 				}
 
 				loading = false;
+				observer.unobserve(sentinel);
+				observer.observe(sentinel);
 			})
 			.catch(function () {
 				sentinel.className = 'error';
