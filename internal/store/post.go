@@ -65,22 +65,34 @@ func (s *Store) GetPostBySlug(ctx context.Context, slug string) (*model.Post, er
 }
 
 func (s *Store) CreatePost(ctx context.Context, p *model.Post) error {
-	_, err := s.db.NewInsert().Model(p).Exec(ctx)
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.NewInsert().Model(p).Exec(ctx)
 	if err != nil {
 		return err
 	}
 	for _, t := range p.Tags {
-		_, err := s.db.NewRaw("INSERT OR IGNORE INTO post_tags (post_id, tag_id) VALUES (?, ?)", p.ID, t.ID).Exec(ctx)
+		_, err := tx.NewRaw("INSERT OR IGNORE INTO post_tags (post_id, tag_id) VALUES (?, ?)", p.ID, t.ID).Exec(ctx)
 		if err != nil {
 			return err
 		}
 	}
-	return nil
+	return tx.Commit()
 }
 
 func (s *Store) UpdatePost(ctx context.Context, p *model.Post) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
 	var existing model.Post
-	err := s.db.NewSelect().
+	err = tx.NewSelect().
 		Model(&existing).
 		Where("slug = ?", p.Slug).
 		Scan(ctx)
@@ -91,22 +103,22 @@ func (s *Store) UpdatePost(ctx context.Context, p *model.Post) error {
 	p.ID = existing.ID
 	p.CreatedAt = existing.CreatedAt
 
-	_, err = s.db.NewUpdate().Model(p).WherePK().Exec(ctx)
+	_, err = tx.NewUpdate().Model(p).WherePK().Exec(ctx)
 	if err != nil {
 		return err
 	}
 
-	_, err = s.db.NewRaw("DELETE FROM post_tags WHERE post_id = ?", p.ID).Exec(ctx)
+	_, err = tx.NewRaw("DELETE FROM post_tags WHERE post_id = ?", p.ID).Exec(ctx)
 	if err != nil {
 		return err
 	}
 	for _, t := range p.Tags {
-		_, err = s.db.NewRaw("INSERT OR IGNORE INTO post_tags (post_id, tag_id) VALUES (?, ?)", p.ID, t.ID).Exec(ctx)
+		_, err = tx.NewRaw("INSERT OR IGNORE INTO post_tags (post_id, tag_id) VALUES (?, ?)", p.ID, t.ID).Exec(ctx)
 		if err != nil {
 			return err
 		}
 	}
-	return nil
+	return tx.Commit()
 }
 
 func (s *Store) DeletePost(ctx context.Context, slug string) error {
@@ -213,22 +225,28 @@ func (s *Store) GetPostByID(ctx context.Context, id int64) (*model.Post, error) 
 }
 
 func (s *Store) UpdatePostByID(ctx context.Context, p *model.Post) error {
-	_, err := s.db.NewUpdate().Model(p).WherePK().Exec(ctx)
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.NewUpdate().Model(p).WherePK().Exec(ctx)
 	if err != nil {
 		return err
 	}
 
-	_, err = s.db.NewRaw("DELETE FROM post_tags WHERE post_id = ?", p.ID).Exec(ctx)
+	_, err = tx.NewRaw("DELETE FROM post_tags WHERE post_id = ?", p.ID).Exec(ctx)
 	if err != nil {
 		return err
 	}
 	for _, t := range p.Tags {
-		_, err = s.db.NewRaw("INSERT OR IGNORE INTO post_tags (post_id, tag_id) VALUES (?, ?)", p.ID, t.ID).Exec(ctx)
+		_, err = tx.NewRaw("INSERT OR IGNORE INTO post_tags (post_id, tag_id) VALUES (?, ?)", p.ID, t.ID).Exec(ctx)
 		if err != nil {
 			return err
 		}
 	}
-	return nil
+	return tx.Commit()
 }
 
 func (s *Store) DeletePostByID(ctx context.Context, id int64) error {
