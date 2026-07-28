@@ -139,6 +139,88 @@ body {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
 }
 
+/* ---- Floating filter button ---- */
+.filter-fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 50;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.35);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.filter-fab:hover {
+    transform: scale(1.08) translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.45);
+}
+
+.filter-fab::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ef4444;
+    opacity: 0;
+    transform: scale(0);
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.filter-fab.has-badge::after {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* ---- Filter drawer ---- */
+.filter-drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 48;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+
+.filter-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(380px, 90vw);
+    background: var(--bulma-body-background-color, #fff);
+    z-index: 49;
+    padding: 1.5rem;
+    overflow-y: auto;
+    box-shadow: -6px 0 30px rgba(0, 0, 0, 0.12);
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.filter-drawer.is-open {
+    transform: translateX(0);
+}
+
+[data-theme="dark"] .filter-drawer {
+    background: #16162b;
+    box-shadow: -6px 0 30px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .filter-drawer-overlay {
+    background: rgba(0, 0, 0, 0.55);
+}
+
 /* ---- Inputs ---- */
 .input {
     border-radius: 8px;
