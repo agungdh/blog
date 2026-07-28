@@ -25,11 +25,12 @@ func (h *SSRHandler) Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := map[string]any{
-		"Title":    post.Title + " - My Blog",
-		"Post":     post,
-		"PostDate": post.Date,
-		"HTML":     template.HTML(htmlContent),
-		"Year":     time.Now().Year(),
+		"Title":       post.Title + " - My Blog",
+		"Post":        post,
+		"PostDate":    post.Date,
+		"HTML":        template.HTML(htmlContent),
+		"Year":        time.Now().Year(),
+		"AssetHashes": h.AssetHashes,
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

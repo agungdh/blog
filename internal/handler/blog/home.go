@@ -48,6 +48,7 @@ func (h *SSRHandler) Home(w http.ResponseWriter, r *http.Request) {
 		"SelectedCategory": selectedCategory,
 		"SelectedTags":     selectedTags,
 		"Year":             time.Now().Year(),
+		"AssetHashes":      h.AssetHashes,
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

@@ -13,13 +13,20 @@ import (
 
 const postsPerPage = 10
 
-type SSRHandler struct {
-	svc  *service.PostService
-	tmpl *template.Template
+type AssetHashes struct {
+	CSS             string
+	InfiniteScroll  string
+	SearchableFilter string
 }
 
-func NewSSR(svc *service.PostService, tmpl *template.Template) *SSRHandler {
-	return &SSRHandler{svc: svc, tmpl: tmpl}
+type SSRHandler struct {
+	svc         *service.PostService
+	tmpl        *template.Template
+	AssetHashes AssetHashes
+}
+
+func NewSSR(svc *service.PostService, tmpl *template.Template, hashes AssetHashes) *SSRHandler {
+	return &SSRHandler{svc: svc, tmpl: tmpl, AssetHashes: hashes}
 }
 
 func parseFilterParams(r *http.Request) store.FilterParams {
@@ -67,8 +74,9 @@ func filterQueryParams(f store.FilterParams) string {
 func (h *SSRHandler) NotFound(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	data := map[string]any{
-		"Title": "404 - My Blog",
-		"Year":  time.Now().Year(),
+		"Title":       "404 - My Blog",
+		"Year":        time.Now().Year(),
+		"AssetHashes": h.AssetHashes,
 	}
 	if err := h.tmpl.ExecuteTemplate(w, "404.html", data); err != nil {
 		log.Printf("template error (404): %v", err)
@@ -79,8 +87,9 @@ func (h *SSRHandler) serverError(w http.ResponseWriter, r *http.Request, err err
 	log.Printf("server error: %s %s: %v", r.Method, r.URL.Path, err)
 	w.WriteHeader(http.StatusInternalServerError)
 	data := map[string]any{
-		"Title": "500 - My Blog",
-		"Year":  time.Now().Year(),
+		"Title":       "500 - My Blog",
+		"Year":        time.Now().Year(),
+		"AssetHashes": h.AssetHashes,
 	}
 	if tmplErr := h.tmpl.ExecuteTemplate(w, "500.html", data); tmplErr != nil {
 		log.Printf("template error (500): %v", tmplErr)

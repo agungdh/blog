@@ -2,12 +2,16 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"crypto/tls"
+	"encoding/hex"
 	"html/template"
 	"io/fs"
 	"log"
 	"net/http"
 	"os"
+	"path"
+	"regexp"
 	"strings"
 	"time"
 
@@ -26,6 +30,48 @@ import (
 	"blog/internal/service"
 	"blog/internal/store"
 )
+
+var assetHashRe = regexp.MustCompile(`^(.+)\.[a-f0-9]{8}\.(css|js)$`)
+
+func fileHash(fsys fs.FS, name string) string {
+	b, err := fs.ReadFile(fsys, name)
+	if err != nil {
+		log.Fatalf("failed to read %s: %v", name, err)
+	}
+	h := sha256.Sum256(b)
+	return hex.EncodeToString(h[:])[:8]
+}
+
+func computeAssetHashes() blog.AssetHashes {
+	sub, err := fs.Sub(staticFS, "static")
+	if err != nil {
+		log.Fatalf("failed to create static sub-filesystem: %v", err)
+	}
+	return blog.AssetHashes{
+		CSS:              fileHash(sub, "css/style.css"),
+		InfiniteScroll:    fileHash(sub, "js/infinite-scroll.js"),
+		SearchableFilter: fileHash(sub, "js/searchable-filter.js"),
+	}
+}
+
+type strippedFS struct {
+	fs http.FileSystem
+}
+
+func (s strippedFS) Open(name string) (http.File, error) {
+	m := assetHashRe.FindStringSubmatch(path.Base(name))
+	if m != nil {
+		name = path.Join(path.Dir(name), m[1]+"."+m[2])
+	}
+	return s.fs.Open(name)
+}
+
+func cacheControlMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		next.ServeHTTP(w, r)
+	})
+}
 
 func cmdServe(dbPath string) {
 	sqldb := openDB(dbPath)
@@ -57,7 +103,8 @@ func cmdServe(dbPath string) {
 		log.Fatalf("failed to parse templates: %v", err)
 	}
 
-	ssr := blog.NewSSR(svc, tmpl)
+	hashes := computeAssetHashes()
+	ssr := blog.NewSSR(svc, tmpl, hashes)
 
 	r := chi.NewRouter()
 	r.Use(func(next http.Handler) http.Handler {
@@ -87,7 +134,8 @@ func cmdServe(dbPath string) {
 	if err != nil {
 		log.Fatalf("failed to create static sub-filesystem: %v", err)
 	}
-	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.FS(staticSub))))
+	staticHandler := http.FileServer(strippedFS{fs: http.FS(staticSub)})
+	r.Handle("/static/*", cacheControlMiddleware(http.StripPrefix("/static/", staticHandler)))
 
 	r.Get("/", ssr.Home)
 	r.Get("/posts/{slug}", ssr.Post)

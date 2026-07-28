@@ -3,8 +3,8 @@
 <footer class="site-footer">
     <p>&copy; {{.Year}} My Blog &mdash; Powered by Go</p>
 </footer>
-<script src="/static/js/infinite-scroll.js"></script>
-<script src="/static/js/searchable-filter.js"></script>
+<script src="/static/js/infinite-scroll.{{.AssetHashes.InfiniteScroll}}.js"></script>
+<script src="/static/js/searchable-filter.{{.AssetHashes.SearchableFilter}}.js"></script>
 <script>
     (function () {
         var btn = document.getElementById('theme-toggle');
