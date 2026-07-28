@@ -2,26 +2,25 @@
 <div class="columns is-centered">
     <div class="column is-three-fifths">
         <article>
-            <h1 class="title is-3">{{.Post.Title}}</h1>
-            <div class="mb-4">
-                <time class="has-text-grey is-size-7" datetime="{{.Post.Date}}">{{.Post.Date}}</time>
+            <div class="mb-5 is-flex is-align-items-center" style="gap:0.5rem">
                 {{if .Post.Category}}
-                <a class="tag is-link is-light ml-2" href="/?category={{.Post.Category.Slug}}">{{.Post.Category.Name}}</a>
+                <a class="tag is-link is-light is-medium" href="/?category={{.Post.Category.Slug}}">{{.Post.Category.Name}}</a>
                 {{end}}
+                <time class="has-text-grey is-size-7" datetime="{{.Post.Date}}">{{.Post.Date}}</time>
             </div>
+            <h1 class="title is-2 mb-4">{{.Post.Title}}</h1>
             {{if .Post.Tags}}
-            <div class="tags mb-4">
+            <div class="tags mb-5">
                 {{range .Post.Tags}}
-                <a class="tag" href="/?tags={{.Slug}}">{{.Name}}</a>
+                <a class="tag is-light" href="/?tags={{.Slug}}">{{.Name}}</a>
                 {{end}}
             </div>
             {{end}}
             <div class="content">
                 {{.HTML}}
             </div>
-            <p class="mt-5">
-                <a class="button is-small" href="/">&larr; Back to home</a>
-            </p>
+            <hr class="mt-6 mb-5">
+            <a class="button is-light is-rounded" href="/">&larr; Back to home</a>
         </article>
     </div>
 </div>

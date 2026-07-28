@@ -17,14 +17,16 @@
     <link href="/static/css/style.{{.AssetHashes.CSS}}.css" rel="stylesheet">
 </head>
 <body>
-<nav class="navbar" role="navigation" aria-label="main navigation">
+<nav class="navbar is-transparent" role="navigation" aria-label="main navigation">
     <div class="container">
         <div class="navbar-brand">
-            <a class="navbar-item is-size-5 has-text-weight-bold" href="/">My Blog</a>
+            <a class="navbar-item is-size-5 has-text-weight-bold" href="/">
+                <span style="background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">My Blog</span>
+            </a>
         </div>
         <div class="navbar-end" x-data="{ dark: document.documentElement.getAttribute('data-theme') === 'dark' }">
             <div class="navbar-item">
-                <button class="button is-small is-light" @click="dark = !dark; localStorage.setItem('theme', dark ? 'dark' : 'light'); document.documentElement.setAttribute('data-theme', dark ? 'dark' : '')"
+                <button class="button is-small is-light is-rounded" @click="dark = !dark; localStorage.setItem('theme', dark ? 'dark' : 'light'); document.documentElement.setAttribute('data-theme', dark ? 'dark' : '')"
                     :title="dark ? 'Switch to light mode' : 'Switch to dark mode'">
                     <span x-text="dark ? '\u263E' : '\u2600'"></span>
                 </button>

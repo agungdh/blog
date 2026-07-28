@@ -95,13 +95,22 @@ function esc(s) {
 
 function buildCard(p) {
     var cat = p.category
-        ? ' <a class="tag is-link is-light" href="/?category=' + esc(p.category.slug) + '">' + esc(p.category.name) + '</a>'
+        ? '<a class="tag is-link is-light is-small" href="/?category=' + esc(p.category.slug) + '">' + esc(p.category.name) + '</a>'
         : '';
+    var meta = '<div class="is-flex is-align-items-center mb-3" style="gap:0.5rem">'
+        + cat
+        + '<time class="has-text-grey is-size-7" datetime="' + esc(p.date) + '">' + esc(p.date) + '</time>'
+        + '</div>';
     var tags = '';
     if (p.tags && p.tags.length) {
-        tags = '<div class="tags mt-2">' + p.tags.map(function(t) {
-            return '<a class="tag" href="/?tags=' + esc(t.slug) + '">' + esc(t.name) + '</a>';
+        tags = '<div class="tags mt-3">' + p.tags.map(function(t) {
+            return '<a class="tag is-light" href="/?tags=' + esc(t.slug) + '">' + esc(t.name) + '</a>';
         }).join('') + '</div>';
     }
-    return '<div class="card mb-4"><div class="card-content"><h2 class="title is-5 mb-1"><a href="/posts/' + esc(p.slug) + '">' + esc(p.title) + '</a></h2><div class="mb-3"><time class="has-text-grey is-size-7" datetime="' + esc(p.date) + '">' + esc(p.date) + '</time>' + cat + '</div><p class="has-text-grey-dark">' + esc(p.summary) + '</p>' + tags + '</div></div>';
+    return '<div class="card mb-5"><div class="card-content">'
+        + meta
+        + '<h2 class="title is-4 mb-2"><a href="/posts/' + esc(p.slug) + '">' + esc(p.title) + '</a></h2>'
+        + '<p class="has-text-grey-dark" style="line-height:1.7">' + esc(p.summary) + '</p>'
+        + tags
+        + '</div></div>';
 }

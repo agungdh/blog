@@ -6,14 +6,23 @@
 <script id="init-tags-data" type="application/json">[]</script>
 {{end}}
 
-{{if .Filter}}
+{{if not .PageHeader}}
+{{if not .Filter.HasFilter}}
+<div class="hero-blog">
+    <h1 class="title">My Blog</h1>
+    <p class="subtitle">Thoughts, stories, and ideas.</p>
+</div>
+{{end}}
+{{end}}
+
+{{if .Filter.HasFilter}}
 <div class="columns">
 <div class="column is-one-quarter">
     <form class="box" method="GET">
         <h3 class="title is-6 mb-3">Filters</h3>
 
         <div class="field">
-            <label class="label is-size-7">Search</label>
+            <label class="label is-size-7 has-text-weight-semibold" style="text-transform:uppercase;letter-spacing:0.05em">Search</label>
             <div class="control">
                 <input class="input is-small" name="q" type="text" placeholder="Search title..."
                        value="{{.Filter.Search}}">
@@ -24,7 +33,7 @@
         <div class="field" x-data="categorySearch"
              data-cat-name="{{if .SelectedCategory}}{{.SelectedCategory.Name}}{{end}}"
              data-cat-slug="{{if .SelectedCategory}}{{.SelectedCategory.Slug}}{{end}}">
-            <label class="label is-size-7">Category</label>
+            <label class="label is-size-7 has-text-weight-semibold" style="text-transform:uppercase;letter-spacing:0.05em">Category</label>
             <div class="control is-relative">
                 <input type="hidden" name="category" :value="slug">
                 <input class="input is-small" type="text" placeholder="Search categories..."
@@ -47,7 +56,7 @@
         {{end}}
 
         <div class="field">
-            <label class="label is-size-7">Date range</label>
+            <label class="label is-size-7 has-text-weight-semibold" style="text-transform:uppercase;letter-spacing:0.05em">Date range</label>
             <div class="field has-addons">
                 <div class="control">
                     <input class="input is-small" name="from" type="date" value="{{.Filter.DateFrom}}">
@@ -59,7 +68,7 @@
         </div>
 
         <div class="field" x-data="tagChips">
-            <label class="label is-size-7">
+            <label class="label is-size-7 has-text-weight-semibold" style="text-transform:uppercase;letter-spacing:0.05em">
                 Tags
                 <span class="tag is-link is-light is-small ml-1" x-show="tags.length" x-text="tags.length"></span>
             </label>
@@ -106,37 +115,36 @@
 {{end}}
 
 {{if .PageHeader}}
-<h1 class="title is-3">{{.PageHeader}}</h1>
-{{else if not .Filter}}
-<h1 class="title is-3 has-text-centered">Posts</h1>
-{{else}}
-<h1 class="title is-3">Posts</h1>
+<h1 class="title is-3 mb-5">{{.PageHeader}}</h1>
 {{end}}
 
 {{range .Posts}}
-<div class="card mb-4">
+<div class="card mb-5">
     <div class="card-content">
-        <h2 class="title is-5 mb-1">
+        <div class="is-flex is-align-items-center mb-3" style="gap:0.5rem">
+            {{if .Category}}
+            <a class="tag is-link is-light is-small" href="/?category={{.Category.Slug}}">{{.Category.Name}}</a>
+            {{end}}
+            <time class="has-text-grey is-size-7" datetime="{{.Date}}">{{.Date}}</time>
+        </div>
+        <h2 class="title is-4 mb-2">
             <a href="/posts/{{.Slug}}">{{.Title}}</a>
         </h2>
-        <div class="mb-3">
-            <time class="has-text-grey is-size-7" datetime="{{.Date}}">{{.Date}}</time>
-            {{if .Category}}
-            <a class="tag is-link is-light ml-2" href="/?category={{.Category.Slug}}">{{.Category.Name}}</a>
-            {{end}}
-        </div>
-        <p class="has-text-grey-dark">{{.Summary}}</p>
+        <p class="has-text-grey-dark" style="line-height:1.7">{{.Summary}}</p>
         {{if .Tags}}
-        <div class="tags mt-2">
+        <div class="tags mt-3">
             {{range .Tags}}
-            <a class="tag" href="/?tags={{.Slug}}">{{.Name}}</a>
+            <a class="tag is-light" href="/?tags={{.Slug}}">{{.Name}}</a>
             {{end}}
         </div>
         {{end}}
     </div>
 </div>
 {{else}}
-<p class="has-text-grey is-italic">No posts match your filters.</p>
+<div class="has-text-centered py-6">
+    <p class="is-size-5 has-text-grey">No posts yet</p>
+    <p class="has-text-grey-light is-size-7 mt-2">Check back soon for new content.</p>
+</div>
 {{end}}
 
 {{if .Pagination}}
@@ -151,6 +159,6 @@
 {{end}}
 {{end}}
 
-{{if .Filter}}</div></div>{{end}}
+{{if .Filter.HasFilter}}</div></div>{{end}}
 
 {{template "foot" .}}
