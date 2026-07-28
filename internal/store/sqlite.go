@@ -391,3 +391,129 @@ func (s *Store) GetPostsByTagSlugAfter(ctx context.Context, tagSlug, postSlug st
 		Scan(ctx)
 	return posts, err
 }
+
+func (s *Store) GetLatestCategories(ctx context.Context, limit int) ([]model.Category, error) {
+	var categories []model.Category
+	err := s.db.NewSelect().
+		Model(&categories).
+		Order("id DESC").
+		Limit(limit).
+		Scan(ctx)
+	return categories, err
+}
+
+func (s *Store) GetCategoriesAfter(ctx context.Context, slug string, limit int) ([]model.Category, error) {
+	cursor, err := s.GetCategoryBySlug(ctx, slug)
+	if err != nil {
+		return nil, err
+	}
+	var categories []model.Category
+	err = s.db.NewSelect().
+		Model(&categories).
+		Where("id < ?", cursor.ID).
+		Order("id DESC").
+		Limit(limit).
+		Scan(ctx)
+	return categories, err
+}
+
+func (s *Store) GetCategoryByID(ctx context.Context, id int64) (*model.Category, error) {
+	var c model.Category
+	err := s.db.NewSelect().Model(&c).Where("id = ?", id).Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &c, nil
+}
+
+func (s *Store) UpdateCategory(ctx context.Context, c *model.Category) error {
+	_, err := s.db.NewUpdate().Model(c).WherePK().Exec(ctx)
+	return err
+}
+
+func (s *Store) DeleteCategory(ctx context.Context, id int64) error {
+	_, err := s.db.NewDelete().Model((*model.Category)(nil)).Where("id = ?", id).Exec(ctx)
+	return err
+}
+
+func (s *Store) GetLatestTags(ctx context.Context, limit int) ([]model.Tag, error) {
+	var tags []model.Tag
+	err := s.db.NewSelect().
+		Model(&tags).
+		Order("id DESC").
+		Limit(limit).
+		Scan(ctx)
+	return tags, err
+}
+
+func (s *Store) GetTagsAfter(ctx context.Context, slug string, limit int) ([]model.Tag, error) {
+	cursor, err := s.GetTagBySlug(ctx, slug)
+	if err != nil {
+		return nil, err
+	}
+	var tags []model.Tag
+	err = s.db.NewSelect().
+		Model(&tags).
+		Where("id < ?", cursor.ID).
+		Order("id DESC").
+		Limit(limit).
+		Scan(ctx)
+	return tags, err
+}
+
+func (s *Store) GetTagByID(ctx context.Context, id int64) (*model.Tag, error) {
+	var t model.Tag
+	err := s.db.NewSelect().Model(&t).Where("id = ?", id).Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &t, nil
+}
+
+func (s *Store) UpdateTag(ctx context.Context, t *model.Tag) error {
+	_, err := s.db.NewUpdate().Model(t).WherePK().Exec(ctx)
+	return err
+}
+
+func (s *Store) DeleteTag(ctx context.Context, id int64) error {
+	_, err := s.db.NewDelete().Model((*model.Tag)(nil)).Where("id = ?", id).Exec(ctx)
+	return err
+}
+
+func (s *Store) GetPostByID(ctx context.Context, id int64) (*model.Post, error) {
+	var post model.Post
+	err := s.db.NewSelect().
+		Model(&post).
+		Relation("Category").
+		Relation("Tags").
+		Where("post.id = ?", id).
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &post, nil
+}
+
+func (s *Store) UpdatePostByID(ctx context.Context, p *model.Post) error {
+	_, err := s.db.NewUpdate().Model(p).WherePK().Exec(ctx)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.db.NewRaw("DELETE FROM post_tags WHERE post_id = ?", p.ID).Exec(ctx)
+	if err != nil {
+		return err
+	}
+	for _, t := range p.Tags {
+		_, err = s.db.NewRaw("INSERT OR IGNORE INTO post_tags (post_id, tag_id) VALUES (?, ?)", p.ID, t.ID).Exec(ctx)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Store) DeletePostByID(ctx context.Context, id int64) error {
+	_, err := s.db.NewDelete().Model((*model.Post)(nil)).Where("id = ?", id).Exec(ctx)
+	return err
+}

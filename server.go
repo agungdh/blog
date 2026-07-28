@@ -38,6 +38,7 @@ func cmdServe(dbPath string) {
 
 	authSvc := service.NewAuthService(st)
 	authHandler := handler.NewAuthHandler(authSvc)
+	adminHandler := handler.NewAdminHandler(st)
 
 	tmpl := template.New("").Funcs(template.FuncMap{
 		"contains": func(slice []string, item string) bool {
@@ -96,9 +97,34 @@ func cmdServe(dbPath string) {
 
 	r.Get("/swagger/*", httpSwagger.WrapHandler)
 
-	r.Post("/api/admin/login", authHandler.Login)
-	r.With(authHandler.AuthMiddleware).Get("/api/admin/me", authHandler.Me)
-	r.With(authHandler.AuthMiddleware).Delete("/api/admin/logout", authHandler.Logout)
+	r.Route("/api/admin", func(r chi.Router) {
+		r.Post("/login", authHandler.Login)
+
+		r.Group(func(r chi.Router) {
+			r.Use(authHandler.AuthMiddleware)
+
+			r.Get("/me", authHandler.Me)
+			r.Delete("/logout", authHandler.Logout)
+
+			r.Get("/categories", adminHandler.ListCategories)
+			r.Post("/categories", adminHandler.CreateCategory)
+			r.Get("/categories/{id}", adminHandler.GetCategory)
+			r.Put("/categories/{id}", adminHandler.UpdateCategory)
+			r.Delete("/categories/{id}", adminHandler.DeleteCategory)
+
+			r.Get("/tags", adminHandler.ListTags)
+			r.Post("/tags", adminHandler.CreateTag)
+			r.Get("/tags/{id}", adminHandler.GetTag)
+			r.Put("/tags/{id}", adminHandler.UpdateTag)
+			r.Delete("/tags/{id}", adminHandler.DeleteTag)
+
+			r.Get("/posts", adminHandler.ListPosts)
+			r.Post("/posts", adminHandler.CreatePost)
+			r.Get("/posts/{id}", adminHandler.GetPost)
+			r.Put("/posts/{id}", adminHandler.UpdatePost)
+			r.Delete("/posts/{id}", adminHandler.DeletePost)
+		})
+	})
 
 	r.NotFound(ssr.NotFound)
 
