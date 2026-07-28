@@ -3,6 +3,13 @@
 body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     letter-spacing: -0.011em;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main.container {
+    flex: 1;
 }
 
 /* ---- Navbar: glass morphism ---- */
@@ -15,6 +22,21 @@ body {
     top: 0;
     z-index: 30;
     transition: background 0.3s ease;
+}
+
+.navbar > .container {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.navbar-brand {
+    flex-shrink: 0;
+}
+
+.navbar-end {
+    margin-left: auto;
+    flex-shrink: 0;
 }
 
 /* ---- Hero banner ---- */
