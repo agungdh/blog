@@ -3,30 +3,24 @@ package main
 import (
 	"context"
 	"crypto/sha256"
-	"crypto/tls"
 	"encoding/hex"
 	"html/template"
 	"io/fs"
 	"log"
 	"net/http"
-	"os"
 	"path"
 	"regexp"
-	"strings"
 	"time"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/sqlitedialect"
 
-	httpSwagger "github.com/swaggo/http-swagger"
-
-	_ "blog/docs"
-
+	"blog/internal/config"
 	"blog/internal/handler/admin"
 	"blog/internal/handler/auth"
 	"blog/internal/handler/blog"
+	mw "blog/internal/middleware"
+	"blog/internal/router"
 	"blog/internal/service"
 	"blog/internal/store"
 )
@@ -66,15 +60,8 @@ func (s strippedFS) Open(name string) (http.File, error) {
 	return s.fs.Open(name)
 }
 
-func cacheControlMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-		next.ServeHTTP(w, r)
-	})
-}
-
-func cmdServe(dbPath string) {
-	sqldb := openDB(dbPath)
+func cmdServe(cfg config.Config) {
+	sqldb := openDB(cfg.DBPath)
 	defer func() { _ = sqldb.Close() }()
 
 	db := bun.NewDB(sqldb, sqlitedialect.New())
@@ -85,8 +72,6 @@ func cmdServe(dbPath string) {
 	svc := service.New(st)
 
 	authSvc := service.NewAuthService(st)
-	authHandler := auth.NewHandler(authSvc)
-	adminHandler := admin.NewHandler(st)
 
 	tmpl := template.New("").Funcs(template.FuncMap{
 		"contains": func(slice []string, item string) bool {
@@ -104,131 +89,46 @@ func cmdServe(dbPath string) {
 	}
 
 	hashes := computeAssetHashes()
-	ssr := blog.NewSSR(svc, tmpl, hashes)
-
-	r := chi.NewRouter()
-	r.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			proto := r.Header.Get("X-Forwarded-Proto")
-			if proto == "" {
-				for _, fwd := range r.Header.Values("Forwarded") {
-					for _, part := range strings.Split(fwd, ";") {
-						kv := strings.SplitN(strings.TrimSpace(part), "=", 2)
-						if len(kv) == 2 && strings.TrimSpace(kv[0]) == "proto" {
-							proto = strings.Trim(kv[1], `"`)
-						}
-					}
-				}
-			}
-			if proto == "https" {
-				r.TLS = &tls.ConnectionState{}
-			}
-			next.ServeHTTP(w, r)
-		})
-	})
-	r.Use(middleware.Recoverer)
-	r.Use(middleware.ClientIPFromRemoteAddr)
-	r.Use(corsMiddleware)
 
 	staticSub, err := fs.Sub(staticFS, "static")
 	if err != nil {
 		log.Fatalf("failed to create static sub-filesystem: %v", err)
 	}
-	staticHandler := http.FileServer(strippedFS{fs: http.FS(staticSub)})
-	r.Handle("/static/*", cacheControlMiddleware(http.StripPrefix("/static/", staticHandler)))
+	staticFileServer := http.FileServer(strippedFS{fs: http.FS(staticSub)})
+	staticHandler := mw.CacheControl(http.StripPrefix("/static/", staticFileServer))
 
-	r.Get("/", ssr.Home)
-	r.Get("/posts/{slug}", ssr.Post)
-	r.Get("/categories/{slug}", ssr.Category)
-	r.Get("/tags/{slug}", ssr.Tag)
-
-	r.Get("/api/posts", ssr.APIPosts)
-	r.Get("/api/categories", ssr.APISearchCategories)
-	r.Get("/api/tags", ssr.APISearchTags)
-
-	r.Get("/swagger/*", httpSwagger.WrapHandler)
-
-	r.Route("/api/admin", func(r chi.Router) {
-		r.Post("/login", authHandler.Login)
-
-		r.Group(func(r chi.Router) {
-			r.Use(authHandler.AuthMiddleware)
-
-			r.Get("/me", authHandler.Me)
-			r.Delete("/logout", authHandler.Logout)
-
-			r.Get("/categories", adminHandler.ListCategories)
-			r.Post("/categories", adminHandler.CreateCategory)
-			r.Get("/categories/{id}", adminHandler.GetCategory)
-			r.Put("/categories/{id}", adminHandler.UpdateCategory)
-			r.Delete("/categories/{id}", adminHandler.DeleteCategory)
-
-			r.Get("/tags", adminHandler.ListTags)
-			r.Post("/tags", adminHandler.CreateTag)
-			r.Get("/tags/{id}", adminHandler.GetTag)
-			r.Put("/tags/{id}", adminHandler.UpdateTag)
-			r.Delete("/tags/{id}", adminHandler.DeleteTag)
-
-			r.Get("/posts", adminHandler.ListPosts)
-			r.Post("/posts", adminHandler.CreatePost)
-			r.Get("/posts/{id}", adminHandler.GetPost)
-			r.Put("/posts/{id}", adminHandler.UpdatePost)
-			r.Delete("/posts/{id}", adminHandler.DeletePost)
-		})
+	r := router.New(router.Deps{
+		SSR:    blog.NewSSR(svc, tmpl, hashes),
+		Auth:   auth.NewHandler(authSvc),
+		Admin:  admin.NewHandler(st),
+		Static: staticHandler,
 	})
 
-	r.NotFound(ssr.NotFound)
-
-	if os.Getenv("AI_ENABLED") == "true" {
-		startGenerator(st)
+	if cfg.AI.Enabled {
+		startGenerator(st, cfg.AI)
 	} else {
 		log.Printf("post generator: disabled (set AI_ENABLED=true to enable)")
 	}
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
-	log.Printf("Server running on :%s", port)
-	log.Fatal(http.ListenAndServe(":"+port, r))
+	log.Printf("Server running on :%s", cfg.Port)
+	log.Fatal(http.ListenAndServe(":"+cfg.Port, r))
 }
 
-func corsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type")
-		w.Header().Set("Access-Control-Max-Age", "86400")
-
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
-
-func startGenerator(st *store.Store) {
-	baseURL := os.Getenv("AI_BASE_URL")
-	apiKey := os.Getenv("AI_API_KEY")
-	model := os.Getenv("AI_MODEL")
-	if baseURL == "" || apiKey == "" || model == "" {
+func startGenerator(st *store.Store, aiCfg config.AIConfig) {
+	if aiCfg.BaseURL == "" || aiCfg.APIKey == "" || aiCfg.Model == "" {
 		log.Printf("generator: AI_* env vars not set, generator disabled")
 		return
 	}
 
-	intervalStr := os.Getenv("AI_INTERVAL")
-	interval, err := time.ParseDuration(intervalStr)
+	interval, err := time.ParseDuration(aiCfg.Interval)
 	if err != nil {
 		interval = 1 * time.Hour
 	}
 
-	aiClient := service.NewAIClient(baseURL, apiKey, model)
+	aiClient := service.NewAIClient(aiCfg.BaseURL, aiCfg.APIKey, aiCfg.Model)
 	gen := service.NewPostGenerator(aiClient, st)
 
-	log.Printf("generator: enabled, interval=%v, model=%s", interval, model)
+	log.Printf("generator: enabled, interval=%v, model=%s", interval, aiCfg.Model)
 
 	go func() {
 		ctx := context.Background()

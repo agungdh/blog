@@ -30,7 +30,7 @@ main.go                     → entry point, command dispatch
 app.go                      → embed directives, openDB, runMigrations, swagger annotations
 migrate.go                  → migrate command
 seed.go                     → seed commands (cmdSeed, seedAdminUser, seedSamplePosts)
-server.go                   → web server command (routes, middleware, AI generator)
+server.go                   → web server command (asset hashing, wiring, AI generator)
 docs/docs.go                → generated swagger docs (swag init)
 
 internal/
@@ -68,6 +68,12 @@ internal/
       api.go                → Public JSON API endpoints
   version/
     version.go              → version info
+  config/
+    config.go               → Config struct, env loading, defaults
+  middleware/
+    middleware.go            → CORS, ForwardedProto, CacheControl
+  router/
+    router.go               → Route registration (chi)
 ```
 
 - Module name: `blog` (short, not a full URL path)
