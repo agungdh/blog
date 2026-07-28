@@ -59,7 +59,7 @@ func (h *AdminHandler) ListTags(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(cursorPage[tagResponse]{Data: result, HasNext: hasNext, NextSlug: nextSlug})
+	_ = json.NewEncoder(w).Encode(cursorPage[tagResponse]{Data: result, HasNext: hasNext, NextSlug: nextSlug})
 }
 
 func (h *AdminHandler) GetTag(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +76,7 @@ func (h *AdminHandler) GetTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(tagToResp(*t))
+	_ = json.NewEncoder(w).Encode(tagToResp(*t))
 }
 
 func (h *AdminHandler) CreateTag(w http.ResponseWriter, r *http.Request) {
@@ -109,7 +109,7 @@ func (h *AdminHandler) CreateTag(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(tagToResp(*t))
+	_ = json.NewEncoder(w).Encode(tagToResp(*t))
 }
 
 func (h *AdminHandler) UpdateTag(w http.ResponseWriter, r *http.Request) {
@@ -154,7 +154,7 @@ func (h *AdminHandler) UpdateTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(tagToResp(*existing))
+	_ = json.NewEncoder(w).Encode(tagToResp(*existing))
 }
 
 func (h *AdminHandler) DeleteTag(w http.ResponseWriter, r *http.Request) {

@@ -61,7 +61,7 @@ func (h *SSRHandler) APISearchCategories(w http.ResponseWriter, r *http.Request)
 		results[i] = searchResult{Name: c.Name, Slug: c.Slug}
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(results)
+	_ = json.NewEncoder(w).Encode(results)
 }
 
 func (h *SSRHandler) APISearchTags(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +76,7 @@ func (h *SSRHandler) APISearchTags(w http.ResponseWriter, r *http.Request) {
 		results[i] = searchResult{Name: t.Name, Slug: t.Slug}
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(results)
+	_ = json.NewEncoder(w).Encode(results)
 }
 
 func writeJSON(w http.ResponseWriter, paged *service.CursorPage) {
@@ -106,5 +106,5 @@ func writeJSON(w http.ResponseWriter, paged *service.CursorPage) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	_ = json.NewEncoder(w).Encode(resp)
 }

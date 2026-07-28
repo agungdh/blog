@@ -170,9 +170,9 @@ func (h *AdminHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	if created != nil {
-		json.NewEncoder(w).Encode(postToResp(*created))
+		_ = json.NewEncoder(w).Encode(postToResp(*created))
 	} else {
-		json.NewEncoder(w).Encode(postToResp(*post))
+		_ = json.NewEncoder(w).Encode(postToResp(*post))
 	}
 }
 
@@ -249,9 +249,9 @@ func (h *AdminHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	if updated != nil {
-		json.NewEncoder(w).Encode(postToResp(*updated))
+		_ = json.NewEncoder(w).Encode(postToResp(*updated))
 	} else {
-		json.NewEncoder(w).Encode(postToResp(*existing))
+		_ = json.NewEncoder(w).Encode(postToResp(*existing))
 	}
 }
 

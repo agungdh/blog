@@ -67,7 +67,7 @@ func (c *AIClient) Generate(systemPrompt, userPrompt string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("ai request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("ai returned status %d", resp.StatusCode)

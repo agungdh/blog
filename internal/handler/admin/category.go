@@ -59,7 +59,7 @@ func (h *AdminHandler) ListCategories(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(cursorPage[categoryResponse]{Data: result, HasNext: hasNext, NextSlug: nextSlug})
+	_ = json.NewEncoder(w).Encode(cursorPage[categoryResponse]{Data: result, HasNext: hasNext, NextSlug: nextSlug})
 }
 
 func (h *AdminHandler) GetCategory(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +76,7 @@ func (h *AdminHandler) GetCategory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(catToResp(*c))
+	_ = json.NewEncoder(w).Encode(catToResp(*c))
 }
 
 func (h *AdminHandler) CreateCategory(w http.ResponseWriter, r *http.Request) {
@@ -109,7 +109,7 @@ func (h *AdminHandler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(catToResp(*c))
+	_ = json.NewEncoder(w).Encode(catToResp(*c))
 }
 
 func (h *AdminHandler) UpdateCategory(w http.ResponseWriter, r *http.Request) {
@@ -154,7 +154,7 @@ func (h *AdminHandler) UpdateCategory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(catToResp(*existing))
+	_ = json.NewEncoder(w).Encode(catToResp(*existing))
 }
 
 func (h *AdminHandler) DeleteCategory(w http.ResponseWriter, r *http.Request) {

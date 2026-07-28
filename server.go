@@ -29,10 +29,10 @@ import (
 
 func cmdServe(dbPath string) {
 	sqldb := openDB(dbPath)
-	defer sqldb.Close()
+	defer func() { _ = sqldb.Close() }()
 
 	db := bun.NewDB(sqldb, sqlitedialect.New())
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	st := store.New(db)
 

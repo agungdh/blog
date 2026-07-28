@@ -69,7 +69,7 @@ func (s *Store) CreatePost(ctx context.Context, p *model.Post) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	_, err = tx.NewInsert().Model(p).Exec(ctx)
 	if err != nil {
@@ -89,7 +89,7 @@ func (s *Store) UpdatePost(ctx context.Context, p *model.Post) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	var existing model.Post
 	err = tx.NewSelect().
@@ -228,7 +228,7 @@ func (s *Store) UpdatePostByID(ctx context.Context, p *model.Post) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	_, err = tx.NewUpdate().Model(p).WherePK().Exec(ctx)
 	if err != nil {

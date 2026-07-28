@@ -64,7 +64,7 @@ func filterQueryParams(f store.FilterParams) string {
 	return "&" + strings.Join(parts, "&")
 }
 
-func (h *SSRHandler) NotFound(w http.ResponseWriter, r *http.Request) {
+func (h *SSRHandler) NotFound(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	data := map[string]any{
 		"Title": "404 - My Blog",

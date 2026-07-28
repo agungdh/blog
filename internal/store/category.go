@@ -1,9 +1,7 @@
 package store
 
-import (
+	import (
 	"context"
-
-	"github.com/uptrace/bun"
 
 	"blog/internal/model"
 )
@@ -36,7 +34,7 @@ func (s *Store) GetCategoriesBySlugs(ctx context.Context, slugs []string) ([]mod
 		return nil, nil
 	}
 	var categories []model.Category
-	err := s.db.NewSelect().Model(&categories).Where("slug IN (?)", bun.In(slugs)).Scan(ctx)
+	err := s.db.NewSelect().Model(&categories).Where("slug IN (?)", slugs).Scan(ctx)
 	return categories, err
 }
 

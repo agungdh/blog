@@ -59,6 +59,7 @@ func runMigrations(sqldb *sql.DB) {
 	if err != nil {
 		log.Fatalf("failed to create migration provider: %v", err)
 	}
+	defer func() { _ = provider.Close() }()
 	if _, err := provider.Up(context.Background()); err != nil {
 		log.Fatalf("failed to run migrations: %v", err)
 	}
