@@ -81,6 +81,7 @@ func cmdServe(dbPath string) {
 	})
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.ClientIPFromRemoteAddr)
+	r.Use(corsMiddleware)
 
 	staticSub, err := fs.Sub(staticFS, "static")
 	if err != nil {
@@ -143,6 +144,22 @@ func cmdServe(dbPath string) {
 
 	log.Printf("Server running on :%s", port)
 	log.Fatal(http.ListenAndServe(":"+port, r))
+}
+
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type")
+		w.Header().Set("Access-Control-Max-Age", "86400")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func startGenerator(st *store.Store) {
