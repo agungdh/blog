@@ -11,8 +11,8 @@ import (
 )
 
 type tagPayload struct {
-	Name string `json:"name"`
-	Slug string `json:"slug"`
+	Name string `json:"name" validate:"required"`
+	Slug string `json:"slug" validate:"required"`
 }
 
 type tagResponse struct {
@@ -86,20 +86,14 @@ func (h *AdminHandler) CreateTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ve := validationErrors{}
-
-	if p.Name == "" {
-		ve["name"] = append(ve["name"], "name is required")
-	}
-	if p.Slug == "" {
-		ve["slug"] = append(ve["slug"], "slug is required")
+	ve := h.validateStruct(p)
+	if ve == nil {
+		ve = validationErrors{}
 	}
 
-	if p.Slug != "" {
-		existing, _ := h.st.GetTagBySlug(r.Context(), p.Slug)
-		if existing != nil {
-			ve["slug"] = append(ve["slug"], "slug already exists")
-		}
+	existing, _ := h.st.GetTagBySlug(r.Context(), p.Slug)
+	if existing != nil {
+		ve["slug"] = append(ve["slug"], "slug already exists")
 	}
 
 	if len(ve) > 0 {
@@ -137,20 +131,14 @@ func (h *AdminHandler) UpdateTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ve := validationErrors{}
-
-	if p.Name == "" {
-		ve["name"] = append(ve["name"], "name is required")
-	}
-	if p.Slug == "" {
-		ve["slug"] = append(ve["slug"], "slug is required")
+	ve := h.validateStruct(p)
+	if ve == nil {
+		ve = validationErrors{}
 	}
 
-	if p.Slug != "" {
-		dup, _ := h.st.GetTagBySlug(r.Context(), p.Slug)
-		if dup != nil && dup.ID != id {
-			ve["slug"] = append(ve["slug"], "slug already exists")
-		}
+	dup, _ := h.st.GetTagBySlug(r.Context(), p.Slug)
+	if dup != nil && dup.ID != id {
+		ve["slug"] = append(ve["slug"], "slug already exists")
 	}
 
 	if len(ve) > 0 {

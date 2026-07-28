@@ -12,11 +12,11 @@ import (
 )
 
 type postPayload struct {
-	Title      string  `json:"title"`
-	Slug       string  `json:"slug"`
-	Markdown   string  `json:"markdown"`
-	Date       string  `json:"date"`
-	CategoryID int64   `json:"category_id"`
+	Title      string  `json:"title" validate:"required"`
+	Slug       string  `json:"slug" validate:"required"`
+	Markdown   string  `json:"markdown" validate:"required"`
+	Date       string  `json:"date" validate:"required,datetime=2006-01-02"`
+	CategoryID int64   `json:"category_id" validate:"gt=0"`
 	TagIDs     []int64 `json:"tag_ids"`
 }
 
@@ -115,31 +115,14 @@ func (h *AdminHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ve := validationErrors{}
-
-	if p.Title == "" {
-		ve["title"] = append(ve["title"], "title is required")
-	}
-	if p.Slug == "" {
-		ve["slug"] = append(ve["slug"], "slug is required")
-	}
-	if p.Markdown == "" {
-		ve["markdown"] = append(ve["markdown"], "markdown is required")
-	}
-	if p.Date == "" {
-		ve["date"] = append(ve["date"], "date is required")
-	} else if _, err := time.Parse("2006-01-02", p.Date); err != nil {
-		ve["date"] = append(ve["date"], "date must be in YYYY-MM-DD format")
-	}
-	if p.CategoryID <= 0 {
-		ve["category_id"] = append(ve["category_id"], "category_id is required")
+	ve := h.validateStruct(p)
+	if ve == nil {
+		ve = validationErrors{}
 	}
 
-	if p.Slug != "" {
-		existing, _ := h.st.GetPostBySlug(r.Context(), p.Slug)
-		if existing != nil {
-			ve["slug"] = append(ve["slug"], "slug already exists")
-		}
+	existing, _ := h.st.GetPostBySlug(r.Context(), p.Slug)
+	if existing != nil {
+		ve["slug"] = append(ve["slug"], "slug already exists")
 	}
 
 	if p.CategoryID > 0 {
@@ -212,31 +195,14 @@ func (h *AdminHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ve := validationErrors{}
-
-	if p.Title == "" {
-		ve["title"] = append(ve["title"], "title is required")
-	}
-	if p.Slug == "" {
-		ve["slug"] = append(ve["slug"], "slug is required")
-	}
-	if p.Markdown == "" {
-		ve["markdown"] = append(ve["markdown"], "markdown is required")
-	}
-	if p.Date == "" {
-		ve["date"] = append(ve["date"], "date is required")
-	} else if _, err := time.Parse("2006-01-02", p.Date); err != nil {
-		ve["date"] = append(ve["date"], "date must be in YYYY-MM-DD format")
-	}
-	if p.CategoryID <= 0 {
-		ve["category_id"] = append(ve["category_id"], "category_id is required")
+	ve := h.validateStruct(p)
+	if ve == nil {
+		ve = validationErrors{}
 	}
 
-	if p.Slug != "" {
-		dup, _ := h.st.GetPostBySlug(r.Context(), p.Slug)
-		if dup != nil && dup.ID != id {
-			ve["slug"] = append(ve["slug"], "slug already exists")
-		}
+	dup, _ := h.st.GetPostBySlug(r.Context(), p.Slug)
+	if dup != nil && dup.ID != id {
+		ve["slug"] = append(ve["slug"], "slug already exists")
 	}
 
 	if p.CategoryID > 0 {
