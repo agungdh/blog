@@ -1,6 +1,7 @@
 package blog
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
@@ -38,17 +39,23 @@ func (h *SSRHandler) Home(w http.ResponseWriter, r *http.Request) {
 		selectedTags, _ = h.svc.GetTagsBySlugs(r.Context(), filter.Tags)
 	}
 
+	selectedTagsJSON, _ := json.Marshal(selectedTags)
+	if len(selectedTags) == 0 {
+		selectedTagsJSON = []byte("[]")
+	}
+
 	data := map[string]any{
-		"Title":            "My Blog",
-		"Posts":            paged.Posts,
-		"Pagination":       paged,
-		"ApiPath":          "/api/posts",
-		"Filter":           filter,
-		"FilterParams":     filterQueryParams(filter),
-		"SelectedCategory": selectedCategory,
-		"SelectedTags":     selectedTags,
-		"Year":             time.Now().Year(),
-		"AssetHashes":      h.AssetHashes,
+		"Title":             "My Blog",
+		"Posts":             paged.Posts,
+		"Pagination":        paged,
+		"ApiPath":           "/api/posts",
+		"Filter":            filter,
+		"FilterParams":      filterQueryParams(filter),
+		"SelectedCategory":  selectedCategory,
+		"SelectedTags":      selectedTags,
+		"SelectedTagsJSON":  string(selectedTagsJSON),
+		"Year":              time.Now().Year(),
+		"AssetHashes":       h.AssetHashes,
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

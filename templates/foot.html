@@ -1,26 +1,105 @@
 {{define "foot"}}
 </main>
-<footer class="site-footer">
-    <p>&copy; {{.Year}} My Blog &mdash; Powered by Go</p>
+<footer class="footer py-4">
+    <div class="content has-text-centered">
+        <p>&copy; {{.Year}} My Blog &mdash; Powered by Go</p>
+    </div>
 </footer>
-<script src="/static/js/infinite-scroll.{{.AssetHashes.InfiniteScroll}}.js"></script>
-<script src="/static/js/searchable-filter.{{.AssetHashes.SearchableFilter}}.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/intersect@3.14.1/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 <script>
-    (function () {
-        var btn = document.getElementById('theme-toggle');
-        var isDark = document.documentElement.className === 'dark';
-        updateIcon();
-        btn.addEventListener('click', function () {
-            isDark = !isDark;
-            document.documentElement.className = isDark ? 'dark' : '';
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            updateIcon();
-        });
+document.addEventListener('alpine:init', () => {
+    Alpine.data('categorySearch', () => ({
+        search: '',
+        slug: '',
+        results: [],
+        show: false,
+        get listOpen() { return this.show && this.results.length > 0 },
+        init() {
+            this.search = this.$el.dataset.catName || '';
+            this.slug = this.$el.dataset.catSlug || '';
+        },
+        fetch() {
+            var q = this.search.trim();
+            if (!q) { this.results = []; this.show = false; return; }
+            fetch('/api/categories?q=' + encodeURIComponent(q))
+                .then(r => r.json())
+                .then(data => { this.results = data || []; this.show = (data && data.length > 0); });
+        },
+        select(item) {
+            this.search = item.name;
+            this.slug = item.slug;
+            this.show = false;
+        },
+        blur() { var self = this; setTimeout(() => { self.show = false }, 150); }
+    }));
 
-        function updateIcon() {
-            btn.textContent = isDark ? '\u263E' : '\u2600'
+    Alpine.data('tagChips', () => ({
+        tags: [],
+        search: '',
+        results: [],
+        show: false,
+        get listOpen() { return this.show && this.results.length > 0 },
+        init() {
+            var el = document.getElementById('init-tags-data');
+            try { this.tags = el ? JSON.parse(el.textContent) : []; } catch(e) { this.tags = []; }
+        },
+        fetch() {
+            var q = this.search.trim();
+            if (!q) { this.results = []; this.show = false; return; }
+            fetch('/api/tags?q=' + encodeURIComponent(q))
+                .then(r => r.json())
+                .then(data => { this.results = data || []; this.show = (data && data.length > 0); });
+        },
+        add(item) {
+            if (!this.tags.find(t => t.slug === item.slug)) this.tags.push(item);
+            this.search = '';
+            this.show = false;
+        },
+        remove(index) { this.tags.splice(index, 1); },
+        blur() { var self = this; setTimeout(() => { self.show = false }, 150); }
+    }));
+
+    Alpine.data('infiniteScroll', () => ({
+        loading: false,
+        error: false,
+        done: false,
+        load(el) {
+            if (this.loading || this.done) return;
+            var api = el.dataset.api, after = el.dataset.after, filter = el.dataset.filter || '';
+            if (!api || !after) { this.done = true; return; }
+            this.loading = true; this.error = false;
+            fetch(api + '?after=' + encodeURIComponent(after) + filter)
+                .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+                .then(data => {
+                    if (!data.posts || data.posts.length === 0) { this.done = true; return; }
+                    var cards = data.posts.map(p => buildCard(p)).join('');
+                    el.insertAdjacentHTML('beforebegin', cards);
+                    if (data.has_next) el.dataset.after = data.next_slug;
+                    else this.done = true;
+                })
+                .catch(() => { this.error = true; })
+                .finally(() => { this.loading = false; });
         }
-    })()
+    }));
+});
+
+function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function buildCard(p) {
+    var cat = p.category
+        ? ' <a class="tag is-link is-light" href="/?category=' + esc(p.category.slug) + '">' + esc(p.category.name) + '</a>'
+        : '';
+    var tags = '';
+    if (p.tags && p.tags.length) {
+        tags = '<div class="tags mt-2">' + p.tags.map(function(t) {
+            return '<a class="tag" href="/?tags=' + esc(t.slug) + '">' + esc(t.name) + '</a>';
+        }).join('') + '</div>';
+    }
+    return '<div class="card mb-4"><div class="card-content"><h2 class="title is-5 mb-1"><a href="/posts/' + esc(p.slug) + '">' + esc(p.title) + '</a></h2><div class="mb-3"><time class="has-text-grey is-size-7" datetime="' + esc(p.date) + '">' + esc(p.date) + '</time>' + cat + '</div><p class="has-text-grey-dark">' + esc(p.summary) + '</p>' + tags + '</div></div>';
+}
 </script>
 </body>
 </html>

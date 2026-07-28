@@ -9,20 +9,28 @@
         (function () {
             var t = localStorage.getItem('theme');
             if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme:dark)').matches)) {
-                document.documentElement.className = 'dark'
+                document.documentElement.setAttribute('data-theme', 'dark')
             }
         })()
     </script>
+    <link href="https://cdn.jsdelivr.net/npm/bulma@1.0.3/css/bulma.min.css" rel="stylesheet">
     <link href="/static/css/style.{{.AssetHashes.CSS}}.css" rel="stylesheet">
 </head>
 <body>
-<header class="site-header">
-    <nav>
-        <a class="logo" href="/">My Blog</a>
-        <div class="nav-links">
-            <button aria-label="Toggle theme" id="theme-toggle"></button>
+<nav class="navbar" role="navigation" aria-label="main navigation">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item is-size-5 has-text-weight-bold" href="/">My Blog</a>
         </div>
-    </nav>
-</header>
-<main class="container">
-    {{end}}
+        <div class="navbar-end" x-data="{ dark: document.documentElement.getAttribute('data-theme') === 'dark' }">
+            <div class="navbar-item">
+                <button class="button is-small is-light" @click="dark = !dark; localStorage.setItem('theme', dark ? 'dark' : 'light'); document.documentElement.setAttribute('data-theme', dark ? 'dark' : '')"
+                    :title="dark ? 'Switch to light mode' : 'Switch to dark mode'">
+                    <span x-text="dark ? '\u263E' : '\u2600'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</nav>
+<main class="container px-4 py-4">
+{{end}}

@@ -1,21 +1,28 @@
 {{template "head" .}}
-<div class="content-area content-full">
-    <article class="post-full">
-        <h1>{{.Post.Title}}</h1>
-        <div class="post-meta">
-            <time datetime="{{.Post.Date}}">{{.Post.Date}}</time>
-            {{if .Post.Category}}<a class="category"
-                                    href="/?category={{.Post.Category.Slug}}">{{.Post.Category.Name}}</a>{{end}}
-        </div>
-        {{if .Post.Tags}}
-        <div class="post-tags">
-            {{range .Post.Tags}}<a class="tag" href="/?tags={{.Slug}}">{{.Name}}</a>{{end}}
-        </div>
-        {{end}}
-        <div class="post-content">
-            {{.HTML}}
-        </div>
-        <p><a class="back-link" href="/">&larr; Back to home</a></p>
-    </article>
+<div class="columns is-centered">
+    <div class="column is-three-fifths">
+        <article>
+            <h1 class="title is-3">{{.Post.Title}}</h1>
+            <div class="mb-4">
+                <time class="has-text-grey is-size-7" datetime="{{.Post.Date}}">{{.Post.Date}}</time>
+                {{if .Post.Category}}
+                <a class="tag is-link is-light ml-2" href="/?category={{.Post.Category.Slug}}">{{.Post.Category.Name}}</a>
+                {{end}}
+            </div>
+            {{if .Post.Tags}}
+            <div class="tags mb-4">
+                {{range .Post.Tags}}
+                <a class="tag" href="/?tags={{.Slug}}">{{.Name}}</a>
+                {{end}}
+            </div>
+            {{end}}
+            <div class="content">
+                {{.HTML}}
+            </div>
+            <p class="mt-5">
+                <a class="button is-small" href="/">&larr; Back to home</a>
+            </p>
+        </article>
+    </div>
 </div>
 {{template "foot" .}}

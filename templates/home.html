@@ -1,85 +1,156 @@
 {{template "head" .}}
+
+{{if .SelectedTags}}
+<script id="init-tags-data" type="application/json">{{.SelectedTagsJSON}}</script>
+{{else}}
+<script id="init-tags-data" type="application/json">[]</script>
+{{end}}
+
 {{if .Filter}}
-<aside class="sidebar">
-    <form class="filter-form" method="GET">
-        <h3 class="filter-title">Filters</h3>
-        <div class="filter-group">
-            <label class="filter-label">Search</label>
-            <input class="filter-input" name="q" placeholder="Search title..." type="text" value="{{.Filter.Search}}">
+<div class="columns">
+<div class="column is-one-quarter">
+    <form class="box" method="GET">
+        <h3 class="title is-6 mb-3">Filters</h3>
+
+        <div class="field">
+            <label class="label is-size-7">Search</label>
+            <div class="control">
+                <input class="input is-small" name="q" type="text" placeholder="Search title..."
+                       value="{{.Filter.Search}}">
+            </div>
         </div>
+
         {{if not .PageHeader}}
-        <div class="filter-group">
-            <label class="filter-label">Category</label>
-            <div class="searchable-input-wrapper" id="category-search-wrapper">
-                <input autocomplete="off" class="filter-input" id="category-search"
-                       placeholder="Search categories..."
-                       type="text"
-                       value="{{if .SelectedCategory}}{{.SelectedCategory.Name}}{{end}}">
-                <input name="category" type="hidden"
-                       value="{{if .SelectedCategory}}{{.SelectedCategory.Slug}}{{end}}">
-                <div class="search-dropdown"></div>
+        <div class="field" x-data="categorySearch"
+             data-cat-name="{{if .SelectedCategory}}{{.SelectedCategory.Name}}{{end}}"
+             data-cat-slug="{{if .SelectedCategory}}{{.SelectedCategory.Slug}}{{end}}">
+            <label class="label is-size-7">Category</label>
+            <div class="control is-relative">
+                <input type="hidden" name="category" :value="slug">
+                <input class="input is-small" type="text" placeholder="Search categories..."
+                       x-model="search" @input.debounce.300ms="fetch"
+                       @focus="results.length > 0 && (show = true)"
+                       @blur="blur" autocomplete="off">
+                <div x-show="listOpen" @click.outside="show = false"
+                     class="dropdown is-active is-block"
+                     style="display:none;position:absolute;z-index:20;left:0;right:0;top:100%;">
+                    <div class="dropdown-menu" style="width:100%">
+                        <div class="dropdown-content">
+                            <template x-for="r in results" :key="r.slug">
+                                <a class="dropdown-item" @click.prevent="select(r)" href="#" x-text="r.name"></a>
+                            </template>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         {{end}}
-        <div class="filter-group">
-            <label class="filter-label">Date range</label>
-            <div class="filter-dates">
-                <input class="filter-input" name="from" type="date" value="{{.Filter.DateFrom}}">
-                <span class="filter-date-sep">to</span>
-                <input class="filter-input" name="to" type="date" value="{{.Filter.DateTo}}">
+
+        <div class="field">
+            <label class="label is-size-7">Date range</label>
+            <div class="field has-addons">
+                <div class="control">
+                    <input class="input is-small" name="from" type="date" value="{{.Filter.DateFrom}}">
+                </div>
+                <div class="control">
+                    <input class="input is-small" name="to" type="date" value="{{.Filter.DateTo}}">
+                </div>
             </div>
         </div>
-        <div class="filter-group">
-            <span class="filter-label">Tags {{if .SelectedTags}}<span class="filter-badge">{{len .SelectedTags}}</span>{{end}}</span>
-            <div class="searchable-input-wrapper" id="tags-search-wrapper">
-                <div class="tag-chips" id="tag-chips">
-                    {{range .SelectedTags}}
-                    <span class="tag-chip" data-slug="{{.Slug}}">
-                        {{.Name}}<button class="tag-chip-remove" type="button">&times;</button>
+
+        <div class="field" x-data="tagChips">
+            <label class="label is-size-7">
+                Tags
+                <span class="tag is-link is-light is-small ml-1" x-show="tags.length" x-text="tags.length"></span>
+            </label>
+            <div class="tags" x-show="tags.length">
+                <template x-for="(t, i) in tags" :key="t.slug">
+                    <span class="tag">
+                        <span x-text="t.name"></span>
+                        <button class="delete is-small" @click.prevent="remove(i)"></button>
+                        <input type="hidden" name="tags" :value="t.slug">
                     </span>
-                    {{end}}
-                </div>
-                <input autocomplete="off" class="filter-input" id="tags-search"
-                       placeholder="Search tags..." type="text">
-                <div class="search-dropdown"></div>
-                <div id="tags-hidden" style="display:none">
-                    {{range .SelectedTags}}
-                    <input checked name="tags" type="checkbox" value="{{.Slug}}">
-                    {{end}}
+                </template>
+            </div>
+            <div class="control is-relative">
+                <input class="input is-small" type="text" placeholder="Search tags..."
+                       x-model="search" @input.debounce.300ms="fetch"
+                       @focus="results.length > 0 && (show = true)"
+                       @blur="blur" autocomplete="off">
+                <div x-show="listOpen" @click.outside="show = false"
+                     class="dropdown is-active is-block"
+                     style="display:none;position:absolute;z-index:20;left:0;right:0;top:100%;">
+                    <div class="dropdown-menu" style="width:100%">
+                        <div class="dropdown-content">
+                            <template x-for="r in results" :key="r.slug">
+                                <a class="dropdown-item" @click.prevent="add(r)" href="#" x-text="r.name"></a>
+                            </template>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="filter-actions">
-            <button class="btn btn-primary" type="submit">Filter</button>
-            <a class="btn btn-ghost" href="{{if .PageHeader}}/{{else}}.{{end}}">Clear</a>
+
+        <div class="field is-grouped">
+            <div class="control is-expanded">
+                <button class="button is-primary is-small is-fullwidth" type="submit">Filter</button>
+            </div>
+            <div class="control">
+                <a class="button is-small" href="{{if .PageHeader}}/{{else}}.{{end}}">Clear</a>
+            </div>
         </div>
     </form>
-</aside>
+</div>
+
+<div class="column">
 {{end}}
-<div class="content-area{{if not .Filter}} content-full{{end}}">
-    {{if .PageHeader}}<h1 class="page-title">{{.PageHeader}}</h1>{{else}}<h1 class="page-title">Posts</h1>{{end}}
-    {{range .Posts}}
-    <article class="post-card">
-        <h2><a href="/posts/{{.Slug}}">{{.Title}}</a></h2>
-        <div class="post-meta">
-            <time datetime="{{.Date}}">{{.Date}}</time>
-            {{if .Category}}<a class="category" href="/?category={{.Category.Slug}}">{{.Category.Name}}</a>{{end}}
+
+{{if .PageHeader}}
+<h1 class="title is-3">{{.PageHeader}}</h1>
+{{else if not .Filter}}
+<h1 class="title is-3 has-text-centered">Posts</h1>
+{{else}}
+<h1 class="title is-3">Posts</h1>
+{{end}}
+
+{{range .Posts}}
+<div class="card mb-4">
+    <div class="card-content">
+        <h2 class="title is-5 mb-1">
+            <a href="/posts/{{.Slug}}">{{.Title}}</a>
+        </h2>
+        <div class="mb-3">
+            <time class="has-text-grey is-size-7" datetime="{{.Date}}">{{.Date}}</time>
+            {{if .Category}}
+            <a class="tag is-link is-light ml-2" href="/?category={{.Category.Slug}}">{{.Category.Name}}</a>
+            {{end}}
         </div>
-        <p class="post-summary">{{.Summary}}</p>
+        <p class="has-text-grey-dark">{{.Summary}}</p>
         {{if .Tags}}
-        <div class="post-tags">
-            {{range .Tags}}<a class="tag" href="/?tags={{.Slug}}">{{.Name}}</a>{{end}}
+        <div class="tags mt-2">
+            {{range .Tags}}
+            <a class="tag" href="/?tags={{.Slug}}">{{.Name}}</a>
+            {{end}}
         </div>
         {{end}}
-    </article>
-    {{else}}
-    <p class="empty">No posts match your filters.</p>
-    {{end}}
-    {{if .Pagination}}
-    {{if .Pagination.HasNext}}
-    <div data-after="{{.Pagination.NextSlug}}" data-api="{{.ApiPath}}" data-filter="{{.FilterParams}}"
-         id="load-more"></div>
-    {{end}}
-    {{end}}
+    </div>
 </div>
+{{else}}
+<p class="has-text-grey is-italic">No posts match your filters.</p>
+{{end}}
+
+{{if .Pagination}}
+{{if .Pagination.HasNext}}
+<div x-data="infiniteScroll" x-intersect="load($el)"
+     data-api="{{.ApiPath}}" data-after="{{.Pagination.NextSlug}}"
+     data-filter="{{.FilterParams}}"
+     class="has-text-centered py-5">
+    <span x-show="loading" style="display:none" class="button is-loading is-text"></span>
+    <span x-show="error" style="display:none" class="has-text-grey is-size-7">Failed to load. Scroll to retry.</span>
+</div>
+{{end}}
+{{end}}
+
+{{if .Filter}}</div></div>{{end}}
+
 {{template "foot" .}}

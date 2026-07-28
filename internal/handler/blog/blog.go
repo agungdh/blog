@@ -14,9 +14,7 @@ import (
 const postsPerPage = 10
 
 type AssetHashes struct {
-	CSS             string
-	InfiniteScroll  string
-	SearchableFilter string
+	CSS string
 }
 
 type SSRHandler struct {
