@@ -109,6 +109,7 @@ paths:
       - admin
 securityDefinitions:
   BearerAuth:
+    description: 'Enter token as: Bearer &lt;your-token&gt;'
     in: header
     name: Authorization
     type: apiKey

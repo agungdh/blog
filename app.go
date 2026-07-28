@@ -7,6 +7,7 @@ package main
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
+// @description Enter token as: Bearer &lt;your-token&gt;
 
 import (
 	"context"
