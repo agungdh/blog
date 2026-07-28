@@ -179,6 +179,8 @@ func main() {
 }
 
 func seedData(ctx context.Context, st *store.Store) {
+	seedAdminUser(ctx, st)
+
 	count, err := st.CountPosts(ctx)
 	if err != nil {
 		log.Printf("seed: failed to check existing posts: %v", err)
@@ -187,8 +189,6 @@ func seedData(ctx context.Context, st *store.Store) {
 	if count > 0 {
 		return
 	}
-
-	seedAdminUser(ctx, st)
 
 	categories := []model.Category{
 		{Name: "Technology", Slug: "technology"},
