@@ -141,7 +141,7 @@
 
 {{if .Pagination}}
 {{if .Pagination.HasNext}}
-<div x-data="infiniteScroll" x-intersect="load($el)"
+<div x-data="infiniteScroll"
      data-api="{{.ApiPath}}" data-after="{{.Pagination.NextSlug}}"
      data-filter="{{.FilterParams}}"
      class="has-text-centered py-5">

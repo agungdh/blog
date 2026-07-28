@@ -5,7 +5,6 @@
         <p>&copy; {{.Year}} My Blog &mdash; Powered by Go</p>
     </div>
 </footer>
-<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/intersect@3.14.1/dist/cdn.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 <script>
 document.addEventListener('alpine:init', () => {
@@ -64,19 +63,34 @@ document.addEventListener('alpine:init', () => {
         loading: false,
         error: false,
         done: false,
-        load(el) {
+        init() {
+            var self = this;
+            window.addEventListener('scroll', () => self.onScroll(), {passive: true});
+            this.$nextTick(() => this.onScroll());
+        },
+        onScroll() {
             if (this.loading || this.done) return;
+            var rect = this.$el.getBoundingClientRect();
+            if (rect.top < window.innerHeight + 400) this.load();
+        },
+        load() {
+            if (this.loading || this.done) return;
+            var el = this.$el;
             var api = el.dataset.api, after = el.dataset.after, filter = el.dataset.filter || '';
             if (!api || !after) { this.done = true; return; }
             this.loading = true; this.error = false;
+            var self = this;
             fetch(api + '?after=' + encodeURIComponent(after) + filter)
                 .then(r => { if (!r.ok) throw new Error(); return r.json(); })
                 .then(data => {
                     if (!data.posts || data.posts.length === 0) { this.done = true; return; }
-                    var cards = data.posts.map(p => buildCard(p)).join('');
-                    el.insertAdjacentHTML('beforebegin', cards);
-                    if (data.has_next) el.dataset.after = data.next_slug;
-                    else this.done = true;
+                    el.insertAdjacentHTML('beforebegin', data.posts.map(p => buildCard(p)).join(''));
+                    if (data.has_next) {
+                        el.dataset.after = data.next_slug;
+                        self.$nextTick(() => self.onScroll());
+                    } else {
+                        this.done = true;
+                    }
                 })
                 .catch(() => { this.error = true; })
                 .finally(() => { this.loading = false; });
