@@ -186,10 +186,6 @@ func (s *PostService) GetCategoryBySlug(ctx context.Context, slug string) (*mode
 	return s.store.GetCategoryBySlug(ctx, slug)
 }
 
-func (s *PostService) GetAllCategories(ctx context.Context) ([]model.Category, error) {
-	return s.store.GetAllCategories(ctx)
-}
-
 func (s *PostService) SearchCategories(ctx context.Context, query string, limit int) ([]model.Category, error) {
 	return s.store.SearchCategories(ctx, query, limit)
 }
@@ -200,10 +196,6 @@ func (s *PostService) GetCategoriesBySlugs(ctx context.Context, slugs []string) 
 
 func (s *PostService) GetTagBySlug(ctx context.Context, slug string) (*model.Tag, error) {
 	return s.store.GetTagBySlug(ctx, slug)
-}
-
-func (s *PostService) GetAllTags(ctx context.Context) ([]model.Tag, error) {
-	return s.store.GetAllTags(ctx)
 }
 
 func (s *PostService) SearchTags(ctx context.Context, query string, limit int) ([]model.Tag, error) {

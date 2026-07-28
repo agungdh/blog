@@ -362,43 +362,6 @@ func (h *SSRHandler) Tag(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *SSRHandler) Categories(w http.ResponseWriter, r *http.Request) {
-	categories, err := h.svc.GetAllCategories(r.Context())
-	if err != nil {
-		h.serverError(w, r, err)
-		return
-	}
-
-	data := map[string]any{
-		"Title":      "Categories - My Blog",
-		"Categories": categories,
-		"Year":       time.Now().Year(),
-	}
-
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := h.tmpl.ExecuteTemplate(w, "categories.html", data); err != nil {
-		log.Printf("template error (categories): %v", err)
-	}
-}
-
-func (h *SSRHandler) Tags(w http.ResponseWriter, r *http.Request) {
-	tags, err := h.svc.GetAllTags(r.Context())
-	if err != nil {
-		h.serverError(w, r, err)
-		return
-	}
-
-	data := map[string]any{
-		"Title": "Tags - My Blog",
-		"Tags":  tags,
-		"Year":  time.Now().Year(),
-	}
-
-	if err := h.tmpl.ExecuteTemplate(w, "tags.html", data); err != nil {
-		log.Printf("template error (tags): %v", err)
-	}
-}
-
 func (h *SSRHandler) NotFound(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	data := map[string]any{

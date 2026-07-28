@@ -145,12 +145,6 @@ func (s *Store) CreateCategory(ctx context.Context, c *model.Category) error {
 	return err
 }
 
-func (s *Store) GetAllCategories(ctx context.Context) ([]model.Category, error) {
-	var categories []model.Category
-	err := s.db.NewSelect().Model(&categories).Order("name").Scan(ctx)
-	return categories, err
-}
-
 func (s *Store) SearchCategories(ctx context.Context, query string, limit int) ([]model.Category, error) {
 	if query == "" {
 		return nil, nil
@@ -190,12 +184,6 @@ func (s *Store) GetCategoryBySlug(ctx context.Context, slug string) (*model.Cate
 func (s *Store) CreateTag(ctx context.Context, t *model.Tag) error {
 	_, err := s.db.NewInsert().Model(t).Exec(ctx)
 	return err
-}
-
-func (s *Store) GetAllTags(ctx context.Context) ([]model.Tag, error) {
-	var tags []model.Tag
-	err := s.db.NewSelect().Model(&tags).Order("name").Scan(ctx)
-	return tags, err
 }
 
 func (s *Store) SearchTags(ctx context.Context, query string, limit int) ([]model.Tag, error) {

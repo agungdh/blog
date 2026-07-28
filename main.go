@@ -130,9 +130,7 @@ func main() {
 
 	r.Get("/", ssr.Home)
 	r.Get("/posts/{slug}", ssr.Post)
-	r.Get("/categories", ssr.Categories)
 	r.Get("/categories/{slug}", ssr.Category)
-	r.Get("/tags", ssr.Tags)
 	r.Get("/tags/{slug}", ssr.Tag)
 
 	r.Get("/api/posts", ssr.APIPosts)
