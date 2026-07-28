@@ -19,13 +19,15 @@ type AssetHashes struct {
 }
 
 type SSRHandler struct {
-	svc         *service.PostService
-	tmpl        *template.Template
-	AssetHashes AssetHashes
+	svc             *service.PostService
+	tmpl            *template.Template
+	AssetHashes     AssetHashes
+	DisqusEnabled   bool
+	DisqusShortname string
 }
 
-func NewSSR(svc *service.PostService, tmpl *template.Template, hashes AssetHashes) *SSRHandler {
-	return &SSRHandler{svc: svc, tmpl: tmpl, AssetHashes: hashes}
+func NewSSR(svc *service.PostService, tmpl *template.Template, hashes AssetHashes, disqusEnabled bool, disqusShortname string) *SSRHandler {
+	return &SSRHandler{svc: svc, tmpl: tmpl, AssetHashes: hashes, DisqusEnabled: disqusEnabled, DisqusShortname: disqusShortname}
 }
 
 func parseFilterParams(r *http.Request) store.FilterParams {
