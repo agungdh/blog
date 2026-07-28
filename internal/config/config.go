@@ -3,11 +3,9 @@ package config
 import "os"
 
 type Config struct {
-	DBPath          string
-	Port            string
-	AI              AIConfig
-	DisqusEnabled   bool
-	DisqusShortname string
+	DBPath string
+	Port   string
+	AI     AIConfig
 }
 
 type AIConfig struct {
@@ -20,10 +18,8 @@ type AIConfig struct {
 
 func Load() Config {
 	return Config{
-		DBPath:          envOrDefault("DB_PATH", "blog.db"),
-		Port:            envOrDefault("PORT", "8080"),
-		DisqusEnabled:   os.Getenv("DISQUS_ENABLED") == "true",
-		DisqusShortname: os.Getenv("DISQUS_SHORTNAME"),
+		DBPath: envOrDefault("DB_PATH", "blog.db"),
+		Port:   envOrDefault("PORT", "8080"),
 		AI: AIConfig{
 			Enabled:  os.Getenv("AI_ENABLED") == "true",
 			BaseURL:  os.Getenv("AI_BASE_URL"),

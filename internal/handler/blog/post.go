@@ -24,25 +24,13 @@ func (h *SSRHandler) Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	scheme := "http"
-	if r.Header.Get("X-Forwarded-Proto") == "https" {
-		scheme = "https"
-	}
-	if r.TLS != nil {
-		scheme = "https"
-	}
-	canonicalURL := scheme + "://" + r.Host + "/posts/" + post.Slug
-
 	data := map[string]any{
-		"Title":            post.Title + " - My Blog",
-		"Post":             post,
-		"PostDate":         post.Date,
-		"HTML":             template.HTML(htmlContent),
-		"Year":             time.Now().Year(),
-		"AssetHashes":      h.AssetHashes,
-		"DisqusEnabled":    h.DisqusEnabled,
-		"DisqusShortname":  h.DisqusShortname,
-		"CanonicalURL":     canonicalURL,
+		"Title":       post.Title + " - My Blog",
+		"Post":        post,
+		"PostDate":    post.Date,
+		"HTML":        template.HTML(htmlContent),
+		"Year":        time.Now().Year(),
+		"AssetHashes": h.AssetHashes,
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
