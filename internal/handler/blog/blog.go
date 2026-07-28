@@ -14,7 +14,8 @@ import (
 const postsPerPage = 10
 
 type AssetHashes struct {
-	CSS string
+	CSS   string
+	AppJS string
 }
 
 type SSRHandler struct {

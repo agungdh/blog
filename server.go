@@ -42,7 +42,8 @@ func computeAssetHashes() blog.AssetHashes {
 		log.Fatalf("failed to create static sub-filesystem: %v", err)
 	}
 	return blog.AssetHashes{
-		CSS: fileHash(sub, "css/style.css"),
+		CSS:   fileHash(sub, "css/style.css"),
+		AppJS: fileHash(sub, "js/app.js"),
 	}
 }
 
