@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/uptrace/bun"
+
 	"blog/internal/model"
 )
 
@@ -108,14 +110,8 @@ func (s *Store) UpdatePost(ctx context.Context, p *model.Post) error {
 		return err
 	}
 
-	if _, err = tx.NewDelete().Model((*model.PostTag)(nil)).Where("post_id = ?", p.ID).Exec(ctx); err != nil {
+	if err := replacePostTags(tx, ctx, p.ID, p.Tags); err != nil {
 		return err
-	}
-	for _, t := range p.Tags {
-		pt := &model.PostTag{PostID: p.ID, TagID: t.ID}
-		if _, err := tx.NewInsert().Model(pt).Ignore().Exec(ctx); err != nil {
-			return err
-		}
 	}
 	return tx.Commit()
 }
@@ -124,6 +120,19 @@ func (s *Store) DeletePost(ctx context.Context, slug string) error {
 	var post model.Post
 	_, err := s.db.NewDelete().Model(&post).Where("slug = ?", slug).Exec(ctx)
 	return err
+}
+
+func replacePostTags(tx bun.Tx, ctx context.Context, postID int64, tags []model.Tag) error {
+	if _, err := tx.NewDelete().Model((*model.PostTag)(nil)).Where("post_id = ?", postID).Exec(ctx); err != nil {
+		return err
+	}
+	for _, t := range tags {
+		pt := &model.PostTag{PostID: postID, TagID: t.ID}
+		if _, err := tx.NewInsert().Model(pt).Ignore().Exec(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (s *Store) GetLatestPostsByCategorySlug(ctx context.Context, slug string, limit int) ([]model.Post, error) {
@@ -235,14 +244,8 @@ func (s *Store) UpdatePostByID(ctx context.Context, p *model.Post) error {
 		return err
 	}
 
-	if _, err = tx.NewDelete().Model((*model.PostTag)(nil)).Where("post_id = ?", p.ID).Exec(ctx); err != nil {
+	if err := replacePostTags(tx, ctx, p.ID, p.Tags); err != nil {
 		return err
-	}
-	for _, t := range p.Tags {
-		pt := &model.PostTag{PostID: p.ID, TagID: t.ID}
-		if _, err := tx.NewInsert().Model(pt).Ignore().Exec(ctx); err != nil {
-			return err
-		}
 	}
 	return tx.Commit()
 }

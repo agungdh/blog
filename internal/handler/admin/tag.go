@@ -25,7 +25,7 @@ func tagToResp(t model.Tag) tagResponse {
 	return tagResponse{ID: t.ID, Name: t.Name, Slug: t.Slug}
 }
 
-func (h *AdminHandler) ListTags(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ListTags(w http.ResponseWriter, r *http.Request) {
 	after := r.URL.Query().Get("after")
 
 	var (
@@ -62,7 +62,7 @@ func (h *AdminHandler) ListTags(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(cursorPage[tagResponse]{Data: result, HasNext: hasNext, NextSlug: nextSlug})
 }
 
-func (h *AdminHandler) GetTag(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetTag(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
@@ -79,7 +79,7 @@ func (h *AdminHandler) GetTag(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(tagToResp(*t))
 }
 
-func (h *AdminHandler) CreateTag(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CreateTag(w http.ResponseWriter, r *http.Request) {
 	var p tagPayload
 	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
@@ -112,7 +112,7 @@ func (h *AdminHandler) CreateTag(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(tagToResp(*t))
 }
 
-func (h *AdminHandler) UpdateTag(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UpdateTag(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
@@ -157,7 +157,7 @@ func (h *AdminHandler) UpdateTag(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(tagToResp(*existing))
 }
 
-func (h *AdminHandler) DeleteTag(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteTag(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})

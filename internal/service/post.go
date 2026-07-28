@@ -29,6 +29,21 @@ func New(s *store.Store) *PostService {
 	}
 }
 
+func (s *PostService) toCursorPage(posts []model.Post, limit int) *CursorPage {
+	hasNext := len(posts) > limit
+	if hasNext {
+		posts = posts[:limit]
+	}
+	for i := range posts {
+		posts[i].Summary = s.generateSummary(posts[i].Markdown)
+	}
+	var nextSlug string
+	if hasNext && len(posts) > 0 {
+		nextSlug = posts[len(posts)-1].Slug
+	}
+	return &CursorPage{Posts: posts, HasNext: hasNext, NextSlug: nextSlug}
+}
+
 func (s *PostService) GetCursorPosts(ctx context.Context, after string, limit int) (*CursorPage, error) {
 	var posts []model.Post
 	var err error
@@ -42,25 +57,7 @@ func (s *PostService) GetCursorPosts(ctx context.Context, after string, limit in
 		return nil, err
 	}
 
-	hasNext := len(posts) > limit
-	if hasNext {
-		posts = posts[:limit]
-	}
-
-	for i := range posts {
-		posts[i].Summary = s.generateSummary(posts[i].Markdown)
-	}
-
-	var nextSlug string
-	if hasNext && len(posts) > 0 {
-		nextSlug = posts[len(posts)-1].Slug
-	}
-
-	return &CursorPage{
-		Posts:    posts,
-		HasNext:  hasNext,
-		NextSlug: nextSlug,
-	}, nil
+	return s.toCursorPage(posts, limit), nil
 }
 
 func (s *PostService) GetCursorPostsFiltered(ctx context.Context, after string, limit int, filter store.FilterParams) (*CursorPage, error) {
@@ -69,25 +66,7 @@ func (s *PostService) GetCursorPostsFiltered(ctx context.Context, after string, 
 		return nil, err
 	}
 
-	hasNext := len(posts) > limit
-	if hasNext {
-		posts = posts[:limit]
-	}
-
-	for i := range posts {
-		posts[i].Summary = s.generateSummary(posts[i].Markdown)
-	}
-
-	var nextSlug string
-	if hasNext && len(posts) > 0 {
-		nextSlug = posts[len(posts)-1].Slug
-	}
-
-	return &CursorPage{
-		Posts:    posts,
-		HasNext:  hasNext,
-		NextSlug: nextSlug,
-	}, nil
+	return s.toCursorPage(posts, limit), nil
 }
 
 func (s *PostService) GetPostBySlug(ctx context.Context, slug string) (*model.Post, error) {
@@ -127,25 +106,7 @@ func (s *PostService) GetCursorPostsByCategorySlug(ctx context.Context, catSlug,
 		return nil, err
 	}
 
-	hasNext := len(posts) > limit
-	if hasNext {
-		posts = posts[:limit]
-	}
-
-	for i := range posts {
-		posts[i].Summary = s.generateSummary(posts[i].Markdown)
-	}
-
-	var nextSlug string
-	if hasNext && len(posts) > 0 {
-		nextSlug = posts[len(posts)-1].Slug
-	}
-
-	return &CursorPage{
-		Posts:    posts,
-		HasNext:  hasNext,
-		NextSlug: nextSlug,
-	}, nil
+	return s.toCursorPage(posts, limit), nil
 }
 
 func (s *PostService) GetCursorPostsByTagSlug(ctx context.Context, tagSlug, after string, limit int) (*CursorPage, error) {
@@ -161,25 +122,7 @@ func (s *PostService) GetCursorPostsByTagSlug(ctx context.Context, tagSlug, afte
 		return nil, err
 	}
 
-	hasNext := len(posts) > limit
-	if hasNext {
-		posts = posts[:limit]
-	}
-
-	for i := range posts {
-		posts[i].Summary = s.generateSummary(posts[i].Markdown)
-	}
-
-	var nextSlug string
-	if hasNext && len(posts) > 0 {
-		nextSlug = posts[len(posts)-1].Slug
-	}
-
-	return &CursorPage{
-		Posts:    posts,
-		HasNext:  hasNext,
-		NextSlug: nextSlug,
-	}, nil
+	return s.toCursorPage(posts, limit), nil
 }
 
 func (s *PostService) GetCategoryBySlug(ctx context.Context, slug string) (*model.Category, error) {

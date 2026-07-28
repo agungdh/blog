@@ -2,6 +2,7 @@ package admin
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -14,12 +15,12 @@ import (
 
 const adminPerPage = 10
 
-type AdminHandler struct {
+type Handler struct {
 	st       *store.Store
 	validate *validator.Validate
 }
 
-func NewAdminHandler(st *store.Store) *AdminHandler {
+func NewHandler(st *store.Store) *Handler {
 	v := validator.New()
 	v.RegisterTagNameFunc(func(fld reflect.StructField) string {
 		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
@@ -28,7 +29,7 @@ func NewAdminHandler(st *store.Store) *AdminHandler {
 		}
 		return name
 	})
-	return &AdminHandler{st: st, validate: v}
+	return &Handler{st: st, validate: v}
 }
 
 type cursorPage[T any] struct {
@@ -70,12 +71,13 @@ func translateValidationErrors(verr validator.ValidationErrors) validationErrors
 	return ve
 }
 
-func (h *AdminHandler) validateStruct(s any) validationErrors {
+func (h *Handler) validateStruct(s any) validationErrors {
 	err := h.validate.Struct(s)
 	if err == nil {
 		return nil
 	}
-	if verr, ok := err.(validator.ValidationErrors); ok {
+	var verr validator.ValidationErrors
+	if errors.As(err, &verr) {
 		return translateValidationErrors(verr)
 	}
 	return nil

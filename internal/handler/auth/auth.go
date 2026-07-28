@@ -12,12 +12,12 @@ type contextKey string
 
 const userContextKey contextKey = "user"
 
-type AuthHandler struct {
+type Handler struct {
 	auth *service.AuthService
 }
 
-func NewAuthHandler(auth *service.AuthService) *AuthHandler {
-	return &AuthHandler{auth: auth}
+func NewHandler(auth *service.AuthService) *Handler {
+	return &Handler{auth: auth}
 }
 
 type loginRequest struct {
@@ -36,7 +36,7 @@ type meResponse struct {
 	Nama     string `json:"nama"`
 }
 
-func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	var req loginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
@@ -57,7 +57,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, loginResponse{Token: token, Nama: nama})
 }
 
-func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 	user := GetUserFromContext(r.Context())
 	if user == nil {
 		respondJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
@@ -71,7 +71,7 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 	token := extractToken(r)
 	if token == "" {
 		respondJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
@@ -86,7 +86,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string]string{"message": "logged out"})
 }
 
-func (h *AuthHandler) AuthMiddleware(next http.Handler) http.Handler {
+func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token := extractToken(r)
 		if token == "" {

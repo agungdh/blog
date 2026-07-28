@@ -54,7 +54,7 @@ func postToResp(p model.Post) postResponse {
 	return resp
 }
 
-func (h *AdminHandler) ListPosts(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ListPosts(w http.ResponseWriter, r *http.Request) {
 	after := r.URL.Query().Get("after")
 
 	var (
@@ -88,10 +88,10 @@ func (h *AdminHandler) ListPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(cursorPage[postResponse]{Data: result, HasNext: hasNext, NextSlug: nextSlug})
+	_ = json.NewEncoder(w).Encode(cursorPage[postResponse]{Data: result, HasNext: hasNext, NextSlug: nextSlug})
 }
 
-func (h *AdminHandler) GetPost(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetPost(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
@@ -105,10 +105,10 @@ func (h *AdminHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(postToResp(*p))
+	_ = json.NewEncoder(w).Encode(postToResp(*p))
 }
 
-func (h *AdminHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	var p postPayload
 	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
@@ -176,7 +176,7 @@ func (h *AdminHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *AdminHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
@@ -255,7 +255,7 @@ func (h *AdminHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *AdminHandler) DeletePost(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})

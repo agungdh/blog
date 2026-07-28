@@ -39,8 +39,8 @@ func cmdServe(dbPath string) {
 	svc := service.New(st)
 
 	authSvc := service.NewAuthService(st)
-	authHandler := auth.NewAuthHandler(authSvc)
-	adminHandler := admin.NewAdminHandler(st)
+	authHandler := auth.NewHandler(authSvc)
+	adminHandler := admin.NewHandler(st)
 
 	tmpl := template.New("").Funcs(template.FuncMap{
 		"contains": func(slice []string, item string) bool {

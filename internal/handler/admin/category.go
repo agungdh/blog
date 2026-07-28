@@ -25,7 +25,7 @@ func catToResp(c model.Category) categoryResponse {
 	return categoryResponse{ID: c.ID, Name: c.Name, Slug: c.Slug}
 }
 
-func (h *AdminHandler) ListCategories(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ListCategories(w http.ResponseWriter, r *http.Request) {
 	after := r.URL.Query().Get("after")
 
 	var (
@@ -62,7 +62,7 @@ func (h *AdminHandler) ListCategories(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(cursorPage[categoryResponse]{Data: result, HasNext: hasNext, NextSlug: nextSlug})
 }
 
-func (h *AdminHandler) GetCategory(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetCategory(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
@@ -79,7 +79,7 @@ func (h *AdminHandler) GetCategory(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(catToResp(*c))
 }
 
-func (h *AdminHandler) CreateCategory(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 	var p categoryPayload
 	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
@@ -112,7 +112,7 @@ func (h *AdminHandler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(catToResp(*c))
 }
 
-func (h *AdminHandler) UpdateCategory(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UpdateCategory(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
@@ -157,7 +157,7 @@ func (h *AdminHandler) UpdateCategory(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(catToResp(*existing))
 }
 
-func (h *AdminHandler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteCategory(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid id"})
