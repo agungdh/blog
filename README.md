@@ -86,7 +86,8 @@ Full API docs at `/swagger/index.html`.
 
 - **Go** + `chi` router — SSR with `html/template`
 - **SQLite** via `modernc.org/sqlite` (pure Go, no CGO)
-- **Bun ORM** — database queries and migrations
+- **Bun ORM** — database queries, migrations, and transactions
+- **go-playground/validator** — form validation
 - **goldmark** — markdown rendering
 - **goose** — database migrations
 - **bcrypt** — password hashing

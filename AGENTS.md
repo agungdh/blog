@@ -108,6 +108,14 @@ internal/
 - Swagger docs available at `/swagger/index.html`
 - Generate/regen swagger docs: `swag init -g app.go -d ./`
 
+## Validation
+
+- Admin CRUD uses `go-playground/validator/v10` with struct tags (`required`, `datetime=`, `gt`)
+- Custom checks (slug uniqueness, category/tag existence) merged into same error map
+- All validation errors batched per-field: `{"errors": {"field": ["msg1", "msg2"]}}` — HTTP 400
+- Multi-table post operations wrapped in Bun transactions (`BeginTx`/`Commit`) for atomicity
+- No raw SQL — all DB operations use Bun ORM
+
 ## Migrations
 
 - Stored in `migrations/*.sql` with goose `-- +goose Up` / `-- +goose Down` annotations
