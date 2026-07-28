@@ -68,13 +68,13 @@
 
 		var meta = '<time datetime="' + esc(p.date) + '">' + esc(p.date) + '</time>';
 		if (p.category) {
-			meta += ' <a href="/categories/' + esc(p.category.slug) + '" class="category">' + esc(p.category.name) + '</a>';
+			meta += ' <a href="/?category=' + esc(p.category.slug) + '" class="category">' + esc(p.category.name) + '</a>';
 		}
 
 		var tags = '';
 		if (p.tags && p.tags.length) {
 			tags = p.tags.map(function (t) {
-				return '<a href="/tags/' + esc(t.slug) + '" class="tag">' + esc(t.name) + '</a>';
+				return '<a href="/?tags=' + esc(t.slug) + '" class="tag">' + esc(t.name) + '</a>';
 			}).join('');
 		}
 

@@ -63,12 +63,12 @@
     <h2><a href="/posts/{{.Slug}}">{{.Title}}</a></h2>
     <div class="post-meta">
         <time datetime="{{.Date}}">{{.Date}}</time>
-        {{if .Category}}<a href="/categories/{{.Category.Slug}}" class="category">{{.Category.Name}}</a>{{end}}
+        {{if .Category}}<a href="/?category={{.Category.Slug}}" class="category">{{.Category.Name}}</a>{{end}}
     </div>
     <p class="post-summary">{{.Summary}}</p>
     {{if .Tags}}
     <div class="post-tags">
-        {{range .Tags}}<a href="/tags/{{.Slug}}" class="tag">{{.Name}}</a>{{end}}
+        {{range .Tags}}<a href="/?tags={{.Slug}}" class="tag">{{.Name}}</a>{{end}}
     </div>
     {{end}}
 </article>

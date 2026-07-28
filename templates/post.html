@@ -4,11 +4,11 @@
     <h1>{{.Post.Title}}</h1>
     <div class="post-meta">
         <time datetime="{{.Post.Date}}">{{.Post.Date}}</time>
-        {{if .Post.Category}}<a href="/categories/{{.Post.Category.Slug}}" class="category">{{.Post.Category.Name}}</a>{{end}}
+        {{if .Post.Category}}<a href="/?category={{.Post.Category.Slug}}" class="category">{{.Post.Category.Name}}</a>{{end}}
     </div>
     {{if .Post.Tags}}
     <div class="post-tags">
-        {{range .Post.Tags}}<a href="/tags/{{.Slug}}" class="tag">{{.Name}}</a>{{end}}
+        {{range .Post.Tags}}<a href="/?tags={{.Slug}}" class="tag">{{.Name}}</a>{{end}}
     </div>
     {{end}}
     <div class="post-content">

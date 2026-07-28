@@ -133,36 +133,6 @@ func (h *SSRHandler) APIPosts(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, paged)
 }
 
-func (h *SSRHandler) APICategoryPosts(w http.ResponseWriter, r *http.Request) {
-	slug := chi.URLParam(r, "slug")
-	filter := parseFilterParams(r)
-	filter.Category = slug
-	after := r.URL.Query().Get("after")
-
-	paged, err := h.svc.GetCursorPostsFiltered(r.Context(), after, postsPerPage, filter)
-	if err != nil {
-		h.serverError(w, r, err)
-		return
-	}
-	writeJSON(w, paged)
-}
-
-func (h *SSRHandler) APITagPosts(w http.ResponseWriter, r *http.Request) {
-	slug := chi.URLParam(r, "slug")
-	filter := parseFilterParams(r)
-	if !contains(filter.Tags, slug) {
-		filter.Tags = append(filter.Tags, slug)
-	}
-	after := r.URL.Query().Get("after")
-
-	paged, err := h.svc.GetCursorPostsFiltered(r.Context(), after, postsPerPage, filter)
-	if err != nil {
-		h.serverError(w, r, err)
-		return
-	}
-	writeJSON(w, paged)
-}
-
 func (h *SSRHandler) APISearchCategories(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("q")
 	categories, err := h.svc.SearchCategories(r.Context(), q, 10)
@@ -278,88 +248,12 @@ func (h *SSRHandler) Post(w http.ResponseWriter, r *http.Request) {
 
 func (h *SSRHandler) Category(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
-
-	category, err := h.svc.GetCategoryBySlug(r.Context(), slug)
-	if err != nil {
-		h.NotFound(w, r)
-		return
-	}
-
-	filter := parseFilterParams(r)
-	filter.Category = slug
-	after := r.URL.Query().Get("after")
-
-	paged, err := h.svc.GetCursorPostsFiltered(r.Context(), after, postsPerPage, filter)
-	if err != nil {
-		h.serverError(w, r, err)
-		return
-	}
-
-	var selectedTags []model.Tag
-	if len(filter.Tags) > 0 {
-		selectedTags, _ = h.svc.GetTagsBySlugs(r.Context(), filter.Tags)
-	}
-
-	data := map[string]any{
-		"Title":        category.Name + " - My Blog",
-		"Posts":        paged.Posts,
-		"PageHeader":   "Category: " + category.Name,
-		"Pagination":   paged,
-		"ApiPath":      "/api/categories/" + slug + "/posts",
-		"Filter":       filter,
-		"FilterParams": filterQueryParams(filter),
-		"SelectedTags": selectedTags,
-		"Year":         time.Now().Year(),
-	}
-
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := h.tmpl.ExecuteTemplate(w, "home.html", data); err != nil {
-		log.Printf("template error (category): %v", err)
-	}
+	http.Redirect(w, r, "/?category="+template.URLQueryEscaper(slug), http.StatusMovedPermanently)
 }
 
 func (h *SSRHandler) Tag(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
-
-	tag, err := h.svc.GetTagBySlug(r.Context(), slug)
-	if err != nil {
-		h.NotFound(w, r)
-		return
-	}
-
-	filter := parseFilterParams(r)
-	if !contains(filter.Tags, slug) {
-		filter.Tags = append(filter.Tags, slug)
-	}
-	after := r.URL.Query().Get("after")
-
-	paged, err := h.svc.GetCursorPostsFiltered(r.Context(), after, postsPerPage, filter)
-	if err != nil {
-		h.serverError(w, r, err)
-		return
-	}
-
-	var selectedTags []model.Tag
-	if len(filter.Tags) > 0 {
-		selectedTags, _ = h.svc.GetTagsBySlugs(r.Context(), filter.Tags)
-	}
-
-	data := map[string]any{
-		"Title":        tag.Name + " - My Blog",
-		"Posts":        paged.Posts,
-		"PageHeader":   "Tag: " + tag.Name,
-		"Pagination":   paged,
-		"ApiPath":      "/api/tags/" + slug + "/posts",
-		"Filter":       filter,
-		"FilterParams": filterQueryParams(filter),
-		"SelectedTags": selectedTags,
-		"Year":         time.Now().Year(),
-	}
-
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := h.tmpl.ExecuteTemplate(w, "home.html", data); err != nil {
-		log.Printf("template error (tag): %v", err)
-	}
+	http.Redirect(w, r, "/?tags="+template.URLQueryEscaper(slug), http.StatusMovedPermanently)
 }
 
 func (h *SSRHandler) NotFound(w http.ResponseWriter, r *http.Request) {
@@ -383,13 +277,4 @@ func (h *SSRHandler) serverError(w http.ResponseWriter, r *http.Request, err err
 	if tmplErr := h.tmpl.ExecuteTemplate(w, "500.html", data); tmplErr != nil {
 		log.Printf("template error (500): %v", tmplErr)
 	}
-}
-
-func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
 }
