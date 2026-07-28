@@ -24,6 +24,7 @@ import (
 	"blog/internal/model"
 	"blog/internal/service"
 	"blog/internal/store"
+	"blog/internal/version"
 )
 
 //go:embed templates/*
@@ -36,6 +37,8 @@ var staticFS embed.FS
 var migrationsFS embed.FS
 
 func main() {
+	log.Printf("blog %s", version.String())
+
 	dbPath := os.Getenv("DB_PATH")
 	if dbPath == "" {
 		dbPath = "blog.db"
