@@ -97,7 +97,7 @@ func cmdServe(cfg config.Config) {
 	staticHandler := mw.CacheControl(http.StripPrefix("/static/", staticFileServer))
 
 	r := router.New(router.Deps{
-		SSR:    blog.NewSSR(svc, tmpl, hashes),
+		SSR:    blog.NewSSR(svc, tmpl, hashes, cfg.DisqusEnabled, cfg.DisqusShortname),
 		Auth:   auth.NewHandler(authSvc),
 		Admin:  admin.NewHandler(st),
 		Static: staticHandler,
