@@ -76,8 +76,8 @@ func (s *Store) CreatePost(ctx context.Context, p *model.Post) error {
 		return err
 	}
 	for _, t := range p.Tags {
-		_, err := tx.NewRaw("INSERT OR IGNORE INTO post_tags (post_id, tag_id) VALUES (?, ?)", p.ID, t.ID).Exec(ctx)
-		if err != nil {
+		pt := &model.PostTag{PostID: p.ID, TagID: t.ID}
+		if _, err := tx.NewInsert().Model(pt).Ignore().Exec(ctx); err != nil {
 			return err
 		}
 	}
@@ -108,13 +108,12 @@ func (s *Store) UpdatePost(ctx context.Context, p *model.Post) error {
 		return err
 	}
 
-	_, err = tx.NewRaw("DELETE FROM post_tags WHERE post_id = ?", p.ID).Exec(ctx)
-	if err != nil {
+	if _, err = tx.NewDelete().Model((*model.PostTag)(nil)).Where("post_id = ?", p.ID).Exec(ctx); err != nil {
 		return err
 	}
 	for _, t := range p.Tags {
-		_, err = tx.NewRaw("INSERT OR IGNORE INTO post_tags (post_id, tag_id) VALUES (?, ?)", p.ID, t.ID).Exec(ctx)
-		if err != nil {
+		pt := &model.PostTag{PostID: p.ID, TagID: t.ID}
+		if _, err := tx.NewInsert().Model(pt).Ignore().Exec(ctx); err != nil {
 			return err
 		}
 	}
@@ -236,13 +235,12 @@ func (s *Store) UpdatePostByID(ctx context.Context, p *model.Post) error {
 		return err
 	}
 
-	_, err = tx.NewRaw("DELETE FROM post_tags WHERE post_id = ?", p.ID).Exec(ctx)
-	if err != nil {
+	if _, err = tx.NewDelete().Model((*model.PostTag)(nil)).Where("post_id = ?", p.ID).Exec(ctx); err != nil {
 		return err
 	}
 	for _, t := range p.Tags {
-		_, err = tx.NewRaw("INSERT OR IGNORE INTO post_tags (post_id, tag_id) VALUES (?, ?)", p.ID, t.ID).Exec(ctx)
-		if err != nil {
+		pt := &model.PostTag{PostID: p.ID, TagID: t.ID}
+		if _, err := tx.NewInsert().Model(pt).Ignore().Exec(ctx); err != nil {
 			return err
 		}
 	}
