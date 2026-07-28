@@ -5,18 +5,18 @@
         <h3 class="filter-title">Filters</h3>
         <div class="filter-group">
             <label class="filter-label">Search</label>
-            <input type="text" name="q" class="filter-input" placeholder="Search title..." value="{{.Filter.Search}}">
+            <input class="filter-input" name="q" placeholder="Search title..." type="text" value="{{.Filter.Search}}">
         </div>
         {{if not .PageHeader}}
         <div class="filter-group">
             <label class="filter-label">Category</label>
             <div class="searchable-input-wrapper" id="category-search-wrapper">
-                <input type="text" class="filter-input" id="category-search"
-                    placeholder="Search categories..."
-                    value="{{if .SelectedCategory}}{{.SelectedCategory.Name}}{{end}}"
-                    autocomplete="off">
-                <input type="hidden" name="category"
-                    value="{{if .SelectedCategory}}{{.SelectedCategory.Slug}}{{end}}">
+                <input autocomplete="off" class="filter-input" id="category-search"
+                       placeholder="Search categories..."
+                       type="text"
+                       value="{{if .SelectedCategory}}{{.SelectedCategory.Name}}{{end}}">
+                <input name="category" type="hidden"
+                       value="{{if .SelectedCategory}}{{.SelectedCategory.Slug}}{{end}}">
                 <div class="search-dropdown"></div>
             </div>
         </div>
@@ -24,9 +24,9 @@
         <div class="filter-group">
             <label class="filter-label">Date range</label>
             <div class="filter-dates">
-                <input type="date" name="from" class="filter-input" value="{{.Filter.DateFrom}}">
+                <input class="filter-input" name="from" type="date" value="{{.Filter.DateFrom}}">
                 <span class="filter-date-sep">to</span>
-                <input type="date" name="to" class="filter-input" value="{{.Filter.DateTo}}">
+                <input class="filter-input" name="to" type="date" value="{{.Filter.DateTo}}">
             </div>
         </div>
         <div class="filter-group">
@@ -35,50 +35,51 @@
                 <div class="tag-chips" id="tag-chips">
                     {{range .SelectedTags}}
                     <span class="tag-chip" data-slug="{{.Slug}}">
-                        {{.Name}}<button type="button" class="tag-chip-remove">&times;</button>
+                        {{.Name}}<button class="tag-chip-remove" type="button">&times;</button>
                     </span>
                     {{end}}
                 </div>
-                <input type="text" class="filter-input" id="tags-search"
-                    placeholder="Search tags..." autocomplete="off">
+                <input autocomplete="off" class="filter-input" id="tags-search"
+                       placeholder="Search tags..." type="text">
                 <div class="search-dropdown"></div>
                 <div id="tags-hidden" style="display:none">
                     {{range .SelectedTags}}
-                    <input type="checkbox" name="tags" value="{{.Slug}}" checked>
+                    <input checked name="tags" type="checkbox" value="{{.Slug}}">
                     {{end}}
                 </div>
             </div>
         </div>
         <div class="filter-actions">
-            <button type="submit" class="btn btn-primary">Filter</button>
-            <a href="{{if .PageHeader}}/{{else}}.{{end}}" class="btn btn-ghost">Clear</a>
+            <button class="btn btn-primary" type="submit">Filter</button>
+            <a class="btn btn-ghost" href="{{if .PageHeader}}/{{else}}.{{end}}">Clear</a>
         </div>
     </form>
 </aside>
 {{end}}
 <div class="content-area{{if not .Filter}} content-full{{end}}">
-{{if .PageHeader}}<h1 class="page-title">{{.PageHeader}}</h1>{{else}}<h1 class="page-title">Posts</h1>{{end}}
-{{range .Posts}}
-<article class="post-card">
-    <h2><a href="/posts/{{.Slug}}">{{.Title}}</a></h2>
-    <div class="post-meta">
-        <time datetime="{{.Date}}">{{.Date}}</time>
-        {{if .Category}}<a href="/?category={{.Category.Slug}}" class="category">{{.Category.Name}}</a>{{end}}
-    </div>
-    <p class="post-summary">{{.Summary}}</p>
-    {{if .Tags}}
-    <div class="post-tags">
-        {{range .Tags}}<a href="/?tags={{.Slug}}" class="tag">{{.Name}}</a>{{end}}
-    </div>
+    {{if .PageHeader}}<h1 class="page-title">{{.PageHeader}}</h1>{{else}}<h1 class="page-title">Posts</h1>{{end}}
+    {{range .Posts}}
+    <article class="post-card">
+        <h2><a href="/posts/{{.Slug}}">{{.Title}}</a></h2>
+        <div class="post-meta">
+            <time datetime="{{.Date}}">{{.Date}}</time>
+            {{if .Category}}<a class="category" href="/?category={{.Category.Slug}}">{{.Category.Name}}</a>{{end}}
+        </div>
+        <p class="post-summary">{{.Summary}}</p>
+        {{if .Tags}}
+        <div class="post-tags">
+            {{range .Tags}}<a class="tag" href="/?tags={{.Slug}}">{{.Name}}</a>{{end}}
+        </div>
+        {{end}}
+    </article>
+    {{else}}
+    <p class="empty">No posts match your filters.</p>
     {{end}}
-</article>
-{{else}}
-<p class="empty">No posts match your filters.</p>
-{{end}}
-{{if .Pagination}}
-{{if .Pagination.HasNext}}
-<div id="load-more" data-api="{{.ApiPath}}" data-after="{{.Pagination.NextSlug}}" data-filter="{{.FilterParams}}"></div>
-{{end}}
-{{end}}
+    {{if .Pagination}}
+    {{if .Pagination.HasNext}}
+    <div data-after="{{.Pagination.NextSlug}}" data-api="{{.ApiPath}}" data-filter="{{.FilterParams}}"
+         id="load-more"></div>
+    {{end}}
+    {{end}}
 </div>
 {{template "foot" .}}

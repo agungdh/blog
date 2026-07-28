@@ -23,12 +23,12 @@ func NewPostGenerator(ai *AIClient, store *store.Store) *PostGenerator {
 }
 
 type generatedPost struct {
-	Title    string           `json:"title"`
-	Slug     string           `json:"slug"`
-	Content  string           `json:"content"`
-	Excerpt  string           `json:"excerpt"`
+	Title    string            `json:"title"`
+	Slug     string            `json:"slug"`
+	Content  string            `json:"content"`
+	Excerpt  string            `json:"excerpt"`
 	Category generatedCategory `json:"category"`
-	Tags     []generatedTag   `json:"tags"`
+	Tags     []generatedTag    `json:"tags"`
 }
 
 type generatedCategory struct {

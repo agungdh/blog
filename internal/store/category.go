@@ -1,6 +1,6 @@
 package store
 
-	import (
+import (
 	"context"
 
 	"blog/internal/model"

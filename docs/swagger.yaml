@@ -24,7 +24,7 @@ definitions:
         type: string
     type: object
 info:
-  contact: {}
+  contact: { }
   description: API documentation for Blog SSR with admin management
   title: Blog API
   version: "1.0"
@@ -32,17 +32,17 @@ paths:
   /api/admin/login:
     post:
       consumes:
-      - application/json
+        - application/json
       description: Authenticate with username and password to get a bearer token
       parameters:
-      - description: Credentials
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handler.loginRequest'
+        - description: Credentials
+          in: body
+          name: request
+          required: true
+          schema:
+            $ref: '#/definitions/handler.loginRequest'
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: Login successful
@@ -62,12 +62,12 @@ paths:
             type: object
       summary: Login
       tags:
-      - admin
+        - admin
   /api/admin/logout:
     delete:
       description: Invalidates the current bearer token
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: Logged out
@@ -82,15 +82,15 @@ paths:
               type: string
             type: object
       security:
-      - BearerAuth: []
+        - BearerAuth: [ ]
       summary: Logout
       tags:
-      - admin
+        - admin
   /api/admin/me:
     get:
       description: Returns the currently authenticated user's information
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: User profile
@@ -103,10 +103,10 @@ paths:
               type: string
             type: object
       security:
-      - BearerAuth: []
+        - BearerAuth: [ ]
       summary: Get current user
       tags:
-      - admin
+        - admin
 securityDefinitions:
   BearerAuth:
     description: 'Enter token as: Bearer &lt;your-token&gt;'

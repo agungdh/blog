@@ -1,20 +1,21 @@
 {{template "head" .}}
 <div class="content-area content-full">
-<article class="post-full">
-    <h1>{{.Post.Title}}</h1>
-    <div class="post-meta">
-        <time datetime="{{.Post.Date}}">{{.Post.Date}}</time>
-        {{if .Post.Category}}<a href="/?category={{.Post.Category.Slug}}" class="category">{{.Post.Category.Name}}</a>{{end}}
-    </div>
-    {{if .Post.Tags}}
-    <div class="post-tags">
-        {{range .Post.Tags}}<a href="/?tags={{.Slug}}" class="tag">{{.Name}}</a>{{end}}
-    </div>
-    {{end}}
-    <div class="post-content">
-        {{.HTML}}
-    </div>
-    <p><a href="/" class="back-link">&larr; Back to home</a></p>
-</article>
+    <article class="post-full">
+        <h1>{{.Post.Title}}</h1>
+        <div class="post-meta">
+            <time datetime="{{.Post.Date}}">{{.Post.Date}}</time>
+            {{if .Post.Category}}<a class="category"
+                                    href="/?category={{.Post.Category.Slug}}">{{.Post.Category.Name}}</a>{{end}}
+        </div>
+        {{if .Post.Tags}}
+        <div class="post-tags">
+            {{range .Post.Tags}}<a class="tag" href="/?tags={{.Slug}}">{{.Name}}</a>{{end}}
+        </div>
+        {{end}}
+        <div class="post-content">
+            {{.HTML}}
+        </div>
+        <p><a class="back-link" href="/">&larr; Back to home</a></p>
+    </article>
 </div>
 {{template "foot" .}}

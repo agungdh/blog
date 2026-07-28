@@ -3,21 +3,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>{{.Title}}</title>
     <script>
-        (function(){var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.className='dark'}})()
+        (function () {
+            var t = localStorage.getItem('theme');
+            if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme:dark)').matches)) {
+                document.documentElement.className = 'dark'
+            }
+        })()
     </script>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="/static/css/style.css" rel="stylesheet">
 </head>
 <body>
-    <header class="site-header">
-        <nav>
-            <a href="/" class="logo">My Blog</a>
-            <div class="nav-links">
-                <button id="theme-toggle" aria-label="Toggle theme"></button>
-            </div>
-        </nav>
-    </header>
-    <main class="container">
-{{end}}
+<header class="site-header">
+    <nav>
+        <a class="logo" href="/">My Blog</a>
+        <div class="nav-links">
+            <button aria-label="Toggle theme" id="theme-toggle"></button>
+        </div>
+    </nav>
+</header>
+<main class="container">
+    {{end}}

@@ -19,7 +19,8 @@ PORT=8080 DB_PATH=blog.db ./blog
 
 - Set `PORT` env (default `8080`), `DB_PATH` env (default `blog.db`)
 - Migrations and seeding are separate CLI commands — no longer auto-run on server start
-- AI-powered post generator: set `AI_ENABLED=true` and configure `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`, `AI_INTERVAL` (e.g. `1h`, `30m`)
+- AI-powered post generator: set `AI_ENABLED=true` and configure `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`, `AI_INTERVAL`
+  (e.g. `1h`, `30m`)
 - No code generation
 
 ## Architecture
@@ -71,34 +72,35 @@ internal/
 
 - Module name: `blog` (short, not a full URL path)
 - All resources embedded at build time via `//go:embed`:
-  - `templates/*` → parsed as `html/template`
-  - `static/*` → served at `/static/`
-  - `migrations/*.sql` → run via `./blog migrate`
-- SQLite uses these PRAGMAs on every start: WAL, busy_timeout=5000, synchronous=NORMAL, cache_size=-2000, foreign_keys=ON
+    - `templates/*` → parsed as `html/template`
+    - `static/*` → served at `/static/`
+    - `migrations/*.sql` → run via `./blog migrate`
+- SQLite uses these PRAGMAs on every start: WAL, busy_timeout=5000, synchronous=NORMAL, cache_size=-2000,
+  foreign_keys=ON
 - Seed data auto-populates fresh databases (idempotent: skips if data already exists)
 
 ## Routes
 
-| Path | Handler | Auth |
-|------|---------|------|
-| `/` | Home — all posts | No |
-| `/posts/{slug}` | Single post | No |
-| `/categories/{slug}` | Redirect to `/?category=` | No |
-| `/tags/{slug}` | Redirect to `/?tags=` | No |
-| `/static/*` | Embedded static files | No |
-| `/swagger/*` | Swagger UI | No |
-| `/api/posts` | JSON posts (paginated) | No |
-| `/api/categories` | JSON category search | No |
-| `/api/tags` | JSON tag search | No |
-| `/api/admin/login` | Login | No |
-| `/api/admin/me` | Current user info | Yes (Bearer) |
-| `/api/admin/logout` | Invalidate session | Yes (Bearer) |
-| `/api/admin/categories` | List categories (cursor) | Yes (Bearer) |
+| Path                         | Handler                    | Auth         |
+|------------------------------|----------------------------|--------------|
+| `/`                          | Home — all posts           | No           |
+| `/posts/{slug}`              | Single post                | No           |
+| `/categories/{slug}`         | Redirect to `/?category=`  | No           |
+| `/tags/{slug}`               | Redirect to `/?tags=`      | No           |
+| `/static/*`                  | Embedded static files      | No           |
+| `/swagger/*`                 | Swagger UI                 | No           |
+| `/api/posts`                 | JSON posts (paginated)     | No           |
+| `/api/categories`            | JSON category search       | No           |
+| `/api/tags`                  | JSON tag search            | No           |
+| `/api/admin/login`           | Login                      | No           |
+| `/api/admin/me`              | Current user info          | Yes (Bearer) |
+| `/api/admin/logout`          | Invalidate session         | Yes (Bearer) |
+| `/api/admin/categories`      | List categories (cursor)   | Yes (Bearer) |
 | `/api/admin/categories/{id}` | Get/update/delete category | Yes (Bearer) |
-| `/api/admin/tags` | List tags (cursor) | Yes (Bearer) |
-| `/api/admin/tags/{id}` | Get/update/delete tag | Yes (Bearer) |
-| `/api/admin/posts` | List posts (cursor) | Yes (Bearer) |
-| `/api/admin/posts/{id}` | Get/update/delete post | Yes (Bearer) |
+| `/api/admin/tags`            | List tags (cursor)         | Yes (Bearer) |
+| `/api/admin/tags/{id}`       | Get/update/delete tag      | Yes (Bearer) |
+| `/api/admin/posts`           | List posts (cursor)        | Yes (Bearer) |
+| `/api/admin/posts/{id}`      | Get/update/delete post     | Yes (Bearer) |
 
 ## Auth
 
