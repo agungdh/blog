@@ -41,15 +41,30 @@ internal/
     user.go                 → User struct
     session.go              → Session struct (opaque token sessions)
   store/
-    sqlite.go               → Store struct + all DB methods (Bun ORM over SQLite)
+    store.go                → Store struct, FilterParams, FTS helpers
+    post.go                 → Post DB methods
+    category.go             → Category DB methods
+    tag.go                  → Tag DB methods
+    user.go                 → User + Session DB methods
   service/
     post.go                 → PostService (markdown rendering + summaries)
     auth.go                 → AuthService (bcrypt hash, token generation, login/logout)
     aiclient.go             → AI HTTP client (OpenAI-compatible API)
     generator.go            → AI post generator
   handler/
-    ssr.go                  → SSR page handlers + public API endpoints
-    auth.go                 → Auth handlers (login/logout/me) + auth middleware
+    admin/
+      admin.go             → AdminHandler struct, cursor page types
+      category.go           → Category CRUD handlers + validation
+      tag.go                → Tag CRUD handlers + validation
+      post.go               → Post CRUD handlers + validation
+    auth/
+      auth.go               → AuthHandler (login/logout/me) + auth middleware
+      helpers.go            → respondJSON, extractToken, GetUserFromContext
+    blog/
+      blog.go               → SSRHandler, filter helpers, error pages
+      home.go               → Home handler
+      post.go               → Post detail, category/tag redirect
+      api.go                → Public JSON API endpoints
   version/
     version.go              → version info
 ```
@@ -78,6 +93,12 @@ internal/
 | `/api/admin/login` | Login | No |
 | `/api/admin/me` | Current user info | Yes (Bearer) |
 | `/api/admin/logout` | Invalidate session | Yes (Bearer) |
+| `/api/admin/categories` | List categories (cursor) | Yes (Bearer) |
+| `/api/admin/categories/{id}` | Get/update/delete category | Yes (Bearer) |
+| `/api/admin/tags` | List tags (cursor) | Yes (Bearer) |
+| `/api/admin/tags/{id}` | Get/update/delete tag | Yes (Bearer) |
+| `/api/admin/posts` | List posts (cursor) | Yes (Bearer) |
+| `/api/admin/posts/{id}` | Get/update/delete post | Yes (Bearer) |
 
 ## Auth
 

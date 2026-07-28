@@ -20,7 +20,9 @@ import (
 
 	_ "blog/docs"
 
-	"blog/internal/handler"
+	"blog/internal/handler/admin"
+	"blog/internal/handler/auth"
+	"blog/internal/handler/blog"
 	"blog/internal/service"
 	"blog/internal/store"
 )
@@ -37,8 +39,8 @@ func cmdServe(dbPath string) {
 	svc := service.New(st)
 
 	authSvc := service.NewAuthService(st)
-	authHandler := handler.NewAuthHandler(authSvc)
-	adminHandler := handler.NewAdminHandler(st)
+	authHandler := auth.NewAuthHandler(authSvc)
+	adminHandler := admin.NewAdminHandler(st)
 
 	tmpl := template.New("").Funcs(template.FuncMap{
 		"contains": func(slice []string, item string) bool {
@@ -55,7 +57,7 @@ func cmdServe(dbPath string) {
 		log.Fatalf("failed to parse templates: %v", err)
 	}
 
-	ssr := handler.NewSSR(svc, tmpl)
+	ssr := blog.NewSSR(svc, tmpl)
 
 	r := chi.NewRouter()
 	r.Use(func(next http.Handler) http.Handler {

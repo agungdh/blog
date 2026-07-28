@@ -49,14 +49,36 @@ Login via `POST /api/admin/login` or use the [Swagger UI](http://localhost:8080/
 
 ## API
 
+### Public
+
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | `GET` | `/api/posts` | No | Paginated posts with filter/search |
 | `GET` | `/api/categories` | No | Search categories |
 | `GET` | `/api/tags` | No | Search tags |
-| `POST` | `/api/admin/login` | No | Login, returns bearer token |
-| `GET` | `/api/admin/me` | Bearer | Current user info |
-| `DELETE` | `/api/admin/logout` | Bearer | Invalidate session |
+
+### Admin (Bearer auth required)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/admin/login` | Login, returns bearer token |
+| `GET` | `/api/admin/me` | Current user info |
+| `DELETE` | `/api/admin/logout` | Invalidate session |
+| `GET` | `/api/admin/categories` | List categories (cursor) |
+| `POST` | `/api/admin/categories` | Create category |
+| `GET` | `/api/admin/categories/{id}` | Get category |
+| `PUT` | `/api/admin/categories/{id}` | Update category |
+| `DELETE` | `/api/admin/categories/{id}` | Delete category |
+| `GET` | `/api/admin/tags` | List tags (cursor) |
+| `POST` | `/api/admin/tags` | Create tag |
+| `GET` | `/api/admin/tags/{id}` | Get tag |
+| `PUT` | `/api/admin/tags/{id}` | Update tag |
+| `DELETE` | `/api/admin/tags/{id}` | Delete tag |
+| `GET` | `/api/admin/posts` | List posts (cursor) |
+| `POST` | `/api/admin/posts` | Create post |
+| `GET` | `/api/admin/posts/{id}` | Get post |
+| `PUT` | `/api/admin/posts/{id}` | Update post |
+| `DELETE` | `/api/admin/posts/{id}` | Delete post |
 
 Full API docs at `/swagger/index.html`.
 
