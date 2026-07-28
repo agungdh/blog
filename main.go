@@ -61,7 +61,7 @@ func main() {
 		case "migrate":
 			cmdMigrate(dbPath)
 		case "seed":
-			cmdSeed(dbPath)
+			cmdSeed(dbPath, os.Args[2:]...)
 		default:
 			log.Fatalf("unknown command: %s (use: migrate, seed)", os.Args[1])
 		}
@@ -79,7 +79,7 @@ func cmdMigrate(dbPath string) {
 	log.Println("migrations complete")
 }
 
-func cmdSeed(dbPath string) {
+func cmdSeed(dbPath string, args ...string) {
 	sqldb := openDB(dbPath)
 	defer sqldb.Close()
 
@@ -89,7 +89,25 @@ func cmdSeed(dbPath string) {
 	defer db.Close()
 
 	st := store.New(db)
-	seedData(context.Background(), st)
+	ctx := context.Background()
+
+	what := "all"
+	if len(args) > 0 {
+		what = args[0]
+	}
+
+	switch what {
+	case "user":
+		seedAdminUser(ctx, st)
+	case "post":
+		seedSamplePosts(ctx, st)
+	case "all":
+		seedAdminUser(ctx, st)
+		seedSamplePosts(ctx, st)
+	default:
+		log.Fatalf("unknown seed target: %s (use: user, post, all)", what)
+	}
+
 	log.Println("seed complete")
 }
 
@@ -220,9 +238,7 @@ func runMigrations(sqldb *sql.DB) {
 	}
 }
 
-func seedData(ctx context.Context, st *store.Store) {
-	seedAdminUser(ctx, st)
-
+func seedSamplePosts(ctx context.Context, st *store.Store) {
 	count, err := st.CountPosts(ctx)
 	if err != nil {
 		log.Printf("seed: failed to check existing posts: %v", err)
