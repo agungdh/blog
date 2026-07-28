@@ -115,50 +115,57 @@ func (h *AdminHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ve := validationErrors{}
+
 	if p.Title == "" {
-		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "title is required"})
-		return
+		ve["title"] = append(ve["title"], "title is required")
 	}
 	if p.Slug == "" {
-		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "slug is required"})
-		return
+		ve["slug"] = append(ve["slug"], "slug is required")
 	}
 	if p.Markdown == "" {
-		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "markdown is required"})
-		return
+		ve["markdown"] = append(ve["markdown"], "markdown is required")
 	}
 	if p.Date == "" {
-		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "date is required"})
-		return
-	}
-	if _, err := time.Parse("2006-01-02", p.Date); err != nil {
-		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "date must be in YYYY-MM-DD format"})
-		return
+		ve["date"] = append(ve["date"], "date is required")
+	} else if _, err := time.Parse("2006-01-02", p.Date); err != nil {
+		ve["date"] = append(ve["date"], "date must be in YYYY-MM-DD format")
 	}
 	if p.CategoryID <= 0 {
-		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "category_id is required"})
+		ve["category_id"] = append(ve["category_id"], "category_id is required")
+	}
+
+	if p.Slug != "" {
+		existing, _ := h.st.GetPostBySlug(r.Context(), p.Slug)
+		if existing != nil {
+			ve["slug"] = append(ve["slug"], "slug already exists")
+		}
+	}
+
+	if p.CategoryID > 0 {
+		_, err := h.st.GetCategoryByID(r.Context(), p.CategoryID)
+		if err != nil {
+			ve["category_id"] = append(ve["category_id"], "category not found")
+		}
+	}
+
+	for _, tid := range p.TagIDs {
+		_, err := h.st.GetTagByID(r.Context(), tid)
+		if err != nil {
+			ve["tag_ids"] = append(ve["tag_ids"], "tag not found: id "+strconv.FormatInt(tid, 10))
+		}
+	}
+
+	if len(ve) > 0 {
+		writeValidationErrors(w, ve)
 		return
 	}
 
-	existing, _ := h.st.GetPostBySlug(r.Context(), p.Slug)
-	if existing != nil {
-		respondJSON(w, http.StatusConflict, map[string]string{"error": "slug already exists"})
-		return
-	}
-
-	cat, err := h.st.GetCategoryByID(r.Context(), p.CategoryID)
-	if err != nil {
-		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "category not found"})
-		return
-	}
+	cat, _ := h.st.GetCategoryByID(r.Context(), p.CategoryID)
 
 	var tags []model.Tag
 	for _, tid := range p.TagIDs {
-		t, err := h.st.GetTagByID(r.Context(), tid)
-		if err != nil {
-			respondJSON(w, http.StatusBadRequest, map[string]string{"error": "tag not found: id " + strconv.FormatInt(tid, 10)})
-			return
-		}
+		t, _ := h.st.GetTagByID(r.Context(), tid)
 		tags = append(tags, *t)
 	}
 
@@ -205,50 +212,57 @@ func (h *AdminHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ve := validationErrors{}
+
 	if p.Title == "" {
-		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "title is required"})
-		return
+		ve["title"] = append(ve["title"], "title is required")
 	}
 	if p.Slug == "" {
-		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "slug is required"})
-		return
+		ve["slug"] = append(ve["slug"], "slug is required")
 	}
 	if p.Markdown == "" {
-		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "markdown is required"})
-		return
+		ve["markdown"] = append(ve["markdown"], "markdown is required")
 	}
 	if p.Date == "" {
-		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "date is required"})
-		return
-	}
-	if _, err := time.Parse("2006-01-02", p.Date); err != nil {
-		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "date must be in YYYY-MM-DD format"})
-		return
+		ve["date"] = append(ve["date"], "date is required")
+	} else if _, err := time.Parse("2006-01-02", p.Date); err != nil {
+		ve["date"] = append(ve["date"], "date must be in YYYY-MM-DD format")
 	}
 	if p.CategoryID <= 0 {
-		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "category_id is required"})
+		ve["category_id"] = append(ve["category_id"], "category_id is required")
+	}
+
+	if p.Slug != "" {
+		dup, _ := h.st.GetPostBySlug(r.Context(), p.Slug)
+		if dup != nil && dup.ID != id {
+			ve["slug"] = append(ve["slug"], "slug already exists")
+		}
+	}
+
+	if p.CategoryID > 0 {
+		_, err := h.st.GetCategoryByID(r.Context(), p.CategoryID)
+		if err != nil {
+			ve["category_id"] = append(ve["category_id"], "category not found")
+		}
+	}
+
+	for _, tid := range p.TagIDs {
+		_, err := h.st.GetTagByID(r.Context(), tid)
+		if err != nil {
+			ve["tag_ids"] = append(ve["tag_ids"], "tag not found: id "+strconv.FormatInt(tid, 10))
+		}
+	}
+
+	if len(ve) > 0 {
+		writeValidationErrors(w, ve)
 		return
 	}
 
-	dup, _ := h.st.GetPostBySlug(r.Context(), p.Slug)
-	if dup != nil && dup.ID != id {
-		respondJSON(w, http.StatusConflict, map[string]string{"error": "slug already exists"})
-		return
-	}
-
-	cat, err := h.st.GetCategoryByID(r.Context(), p.CategoryID)
-	if err != nil {
-		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "category not found"})
-		return
-	}
+	cat, _ := h.st.GetCategoryByID(r.Context(), p.CategoryID)
 
 	var tags []model.Tag
 	for _, tid := range p.TagIDs {
-		t, err := h.st.GetTagByID(r.Context(), tid)
-		if err != nil {
-			respondJSON(w, http.StatusBadRequest, map[string]string{"error": "tag not found: id " + strconv.FormatInt(tid, 10)})
-			return
-		}
+		t, _ := h.st.GetTagByID(r.Context(), tid)
 		tags = append(tags, *t)
 	}
 

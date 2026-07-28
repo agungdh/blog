@@ -28,3 +28,9 @@ func respondJSON(w http.ResponseWriter, status int, v any) {
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(v)
 }
+
+type validationErrors map[string][]string
+
+func writeValidationErrors(w http.ResponseWriter, ve validationErrors) {
+	respondJSON(w, http.StatusBadRequest, map[string]validationErrors{"errors": ve})
+}

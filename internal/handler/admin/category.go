@@ -86,18 +86,24 @@ func (h *AdminHandler) CreateCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ve := validationErrors{}
+
 	if p.Name == "" {
-		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "name is required"})
-		return
+		ve["name"] = append(ve["name"], "name is required")
 	}
 	if p.Slug == "" {
-		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "slug is required"})
-		return
+		ve["slug"] = append(ve["slug"], "slug is required")
 	}
 
-	existing, _ := h.st.GetCategoryBySlug(r.Context(), p.Slug)
-	if existing != nil {
-		respondJSON(w, http.StatusConflict, map[string]string{"error": "slug already exists"})
+	if p.Slug != "" {
+		existing, _ := h.st.GetCategoryBySlug(r.Context(), p.Slug)
+		if existing != nil {
+			ve["slug"] = append(ve["slug"], "slug already exists")
+		}
+	}
+
+	if len(ve) > 0 {
+		writeValidationErrors(w, ve)
 		return
 	}
 
@@ -131,18 +137,24 @@ func (h *AdminHandler) UpdateCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ve := validationErrors{}
+
 	if p.Name == "" {
-		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "name is required"})
-		return
+		ve["name"] = append(ve["name"], "name is required")
 	}
 	if p.Slug == "" {
-		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "slug is required"})
-		return
+		ve["slug"] = append(ve["slug"], "slug is required")
 	}
 
-	dup, _ := h.st.GetCategoryBySlug(r.Context(), p.Slug)
-	if dup != nil && dup.ID != id {
-		respondJSON(w, http.StatusConflict, map[string]string{"error": "slug already exists"})
+	if p.Slug != "" {
+		dup, _ := h.st.GetCategoryBySlug(r.Context(), p.Slug)
+		if dup != nil && dup.ID != id {
+			ve["slug"] = append(ve["slug"], "slug already exists")
+		}
+	}
+
+	if len(ve) > 0 {
+		writeValidationErrors(w, ve)
 		return
 	}
 
