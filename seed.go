@@ -17,8 +17,6 @@ func cmdSeed(dbPath string, args ...string) {
 	sqldb := openDB(dbPath)
 	defer sqldb.Close()
 
-	runMigrations(sqldb)
-
 	db := bun.NewDB(sqldb, sqlitedialect.New())
 	defer db.Close()
 
