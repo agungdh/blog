@@ -34,7 +34,6 @@ jobs:
       - name: Build
         run: |
           go build -ldflags="-s -w \
-            -X 'blog/internal/version.Version=${{ github.ref_name }}' \
             -X 'blog/internal/version.Commit=${{ github.sha }}' \
             -X 'blog/internal/version.BuildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)'" \
             -o ${{ matrix.binary }} .
