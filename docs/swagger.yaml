@@ -1,0 +1,115 @@
+basePath: /
+definitions:
+  handler.loginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  handler.loginResponse:
+    properties:
+      nama:
+        type: string
+      token:
+        type: string
+    type: object
+  handler.meResponse:
+    properties:
+      id:
+        type: integer
+      nama:
+        type: string
+      username:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: API documentation for Blog SSR with admin management
+  title: Blog API
+  version: "1.0"
+paths:
+  /api/admin/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate with username and password to get a bearer token
+      parameters:
+      - description: Credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.loginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            $ref: '#/definitions/handler.loginResponse'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Invalid credentials
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login
+      tags:
+      - admin
+  /api/admin/logout:
+    delete:
+      description: Invalidates the current bearer token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Logged out
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Logout
+      tags:
+      - admin
+  /api/admin/me:
+    get:
+      description: Returns the currently authenticated user's information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile
+          schema:
+            $ref: '#/definitions/handler.meResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get current user
+      tags:
+      - admin
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

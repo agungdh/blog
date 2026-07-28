@@ -1,5 +1,13 @@
 package main
 
+// @title Blog API
+// @version 1.0
+// @description API documentation for Blog SSR with admin management
+// @BasePath /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+
 import (
 	"context"
 	"crypto/tls"
@@ -25,6 +33,10 @@ import (
 	"blog/internal/service"
 	"blog/internal/store"
 	"blog/internal/version"
+
+	_ "blog/docs"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 //go:embed templates/*
@@ -85,6 +97,9 @@ func main() {
 
 	svc := service.New(st)
 
+	authSvc := service.NewAuthService(st)
+	authHandler := handler.NewAuthHandler(authSvc)
+
 	tmpl := template.New("").Funcs(template.FuncMap{
 		"contains": func(slice []string, item string) bool {
 			for _, s := range slice {
@@ -140,6 +155,12 @@ func main() {
 	r.Get("/api/categories", ssr.APISearchCategories)
 	r.Get("/api/tags", ssr.APISearchTags)
 
+	r.Get("/swagger/*", httpSwagger.WrapHandler)
+
+	r.Post("/api/admin/login", authHandler.Login)
+	r.With(authHandler.AuthMiddleware).Get("/api/admin/me", authHandler.Me)
+	r.With(authHandler.AuthMiddleware).Delete("/api/admin/logout", authHandler.Logout)
+
 	r.NotFound(ssr.NotFound)
 
 	if os.Getenv("AI_ENABLED") == "true" {
@@ -158,7 +179,7 @@ func main() {
 }
 
 func seedData(ctx context.Context, st *store.Store) {
-		count, err := st.CountPosts(ctx)
+	count, err := st.CountPosts(ctx)
 	if err != nil {
 		log.Printf("seed: failed to check existing posts: %v", err)
 		return
@@ -166,6 +187,8 @@ func seedData(ctx context.Context, st *store.Store) {
 	if count > 0 {
 		return
 	}
+
+	seedAdminUser(ctx, st)
 
 	categories := []model.Category{
 		{Name: "Technology", Slug: "technology"},
@@ -214,6 +237,35 @@ func seedData(ctx context.Context, st *store.Store) {
 		}
 	}
 	log.Printf("seeded %d posts, %d categories, %d tags", len(samplePosts), len(categories), len(tags))
+}
+
+func seedAdminUser(ctx context.Context, st *store.Store) {
+	count, err := st.CountUsers(ctx)
+	if err != nil {
+		log.Printf("seed: failed to check existing users: %v", err)
+		return
+	}
+	if count > 0 {
+		return
+	}
+
+	authSvc := service.NewAuthService(st)
+	hash, err := authSvc.HashPassword("admin123")
+	if err != nil {
+		log.Printf("seed: failed to hash password: %v", err)
+		return
+	}
+
+	user := &model.User{
+		Username: "admin",
+		Password: hash,
+		Nama:     "Administrator",
+	}
+	if err := st.CreateUser(ctx, user); err != nil {
+		log.Printf("seed: failed to create admin user: %v", err)
+		return
+	}
+	log.Printf("seeded default admin user (username: admin, password: admin123)")
 }
 
 func startGenerator(st *store.Store) {
