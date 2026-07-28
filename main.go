@@ -56,44 +56,51 @@ func main() {
 		dbPath = "blog.db"
 	}
 
-	sqldb, err := sql.Open("sqlite", dbPath)
-	if err != nil {
-		log.Fatalf("failed to open database: %v", err)
-	}
-	defer func() { _ = sqldb.Close() }()
-
-	pragmas := []string{
-		"PRAGMA journal_mode=WAL",
-		"PRAGMA busy_timeout=5000",
-		"PRAGMA synchronous=NORMAL",
-		"PRAGMA cache_size=-2000",
-		"PRAGMA foreign_keys=ON",
-	}
-	for _, p := range pragmas {
-		if _, err := sqldb.Exec(p); err != nil {
-			log.Fatalf("failed to apply pragma: %v", err)
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "migrate":
+			cmdMigrate(dbPath)
+		case "seed":
+			cmdSeed(dbPath)
+		default:
+			log.Fatalf("unknown command: %s (use: migrate, seed)", os.Args[1])
 		}
+		return
 	}
 
-	migrationsDir, err := fs.Sub(migrationsFS, "migrations")
-	if err != nil {
-		log.Fatalf("failed to create migrations sub-filesystem: %v", err)
-	}
-	provider, err := goose.NewProvider(goose.DialectSQLite3, sqldb, migrationsDir)
-	if err != nil {
-		log.Fatalf("failed to create migration provider: %v", err)
-	}
-	if _, err := provider.Up(context.Background()); err != nil {
-		log.Fatalf("failed to run migrations: %v", err)
-	}
+	cmdServe(dbPath)
+}
+
+func cmdMigrate(dbPath string) {
+	sqldb := openDB(dbPath)
+	defer sqldb.Close()
+
+	runMigrations(sqldb)
+	log.Println("migrations complete")
+}
+
+func cmdSeed(dbPath string) {
+	sqldb := openDB(dbPath)
+	defer sqldb.Close()
+
+	runMigrations(sqldb)
 
 	db := bun.NewDB(sqldb, sqlitedialect.New())
-	defer func() { _ = db.Close() }()
+	defer db.Close()
 
 	st := store.New(db)
+	seedData(context.Background(), st)
+	log.Println("seed complete")
+}
 
-	ctx := context.Background()
-	seedData(ctx, st)
+func cmdServe(dbPath string) {
+	sqldb := openDB(dbPath)
+	defer sqldb.Close()
+
+	db := bun.NewDB(sqldb, sqlitedialect.New())
+	defer db.Close()
+
+	st := store.New(db)
 
 	svc := service.New(st)
 
@@ -110,7 +117,7 @@ func main() {
 			return false
 		},
 	})
-	tmpl, err = tmpl.ParseFS(templatesFS, "templates/*.html")
+	tmpl, err := tmpl.ParseFS(templatesFS, "templates/*.html")
 	if err != nil {
 		log.Fatalf("failed to parse templates: %v", err)
 	}
@@ -176,6 +183,41 @@ func main() {
 
 	log.Printf("Server running on :%s", port)
 	log.Fatal(http.ListenAndServe(":"+port, r))
+}
+
+func openDB(dbPath string) *sql.DB {
+	sqldb, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		log.Fatalf("failed to open database: %v", err)
+	}
+
+	pragmas := []string{
+		"PRAGMA journal_mode=WAL",
+		"PRAGMA busy_timeout=5000",
+		"PRAGMA synchronous=NORMAL",
+		"PRAGMA cache_size=-2000",
+		"PRAGMA foreign_keys=ON",
+	}
+	for _, p := range pragmas {
+		if _, err := sqldb.Exec(p); err != nil {
+			log.Fatalf("failed to apply pragma: %v", err)
+		}
+	}
+	return sqldb
+}
+
+func runMigrations(sqldb *sql.DB) {
+	migrationsDir, err := fs.Sub(migrationsFS, "migrations")
+	if err != nil {
+		log.Fatalf("failed to create migrations sub-filesystem: %v", err)
+	}
+	provider, err := goose.NewProvider(goose.DialectSQLite3, sqldb, migrationsDir)
+	if err != nil {
+		log.Fatalf("failed to create migration provider: %v", err)
+	}
+	if _, err := provider.Up(context.Background()); err != nil {
+		log.Fatalf("failed to run migrations: %v", err)
+	}
 }
 
 func seedData(ctx context.Context, st *store.Store) {
