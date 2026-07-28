@@ -9,6 +9,7 @@ on:
 
 jobs:
   build:
+    if: "!startsWith(github.ref, 'refs/tags/')"
     permissions:
       contents: read
     strategy:
@@ -45,24 +46,37 @@ jobs:
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: read
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: dist
-          merge-multiple: true
+      - name: Download artifacts from build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p dist
+          RUN_ID=$(gh run list \
+            --workflow build.yml \
+            --commit "${{ github.sha }}" \
+            --limit 10 \
+            --json databaseId,event,status,conclusion \
+            -q '[.[] | select(.event=="push" and .conclusion=="success") | .databaseId] | first')
+          if [ -z "$RUN_ID" ]; then
+            echo "no successful build run found for this commit"
+            exit 1
+          fi
+          echo "downloading artifacts from run $RUN_ID"
+          gh run download "$RUN_ID" --dir dist
 
       - name: Upload to release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          chmod +x dist/blog-linux-*
-          gh release upload "${{ github.ref_name }}" dist/* --clobber
+          chmod +x dist/blog-linux-*/blog-linux-* || true
+          for f in $(find dist -type f -name 'blog-linux-*'); do chmod +x "$f"; done
+          gh release upload "${{ github.ref_name }}" $(find dist -type f -name 'blog-linux-*') --clobber
