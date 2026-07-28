@@ -1,5 +1,15 @@
 # AGENTS.md
 
+## Commands
+
+```bash
+./blog               # run web server (default)
+./blog migrate       # run database migrations
+./blog seed          # seed all (admin user + sample posts)
+./blog seed user     # seed admin user only
+./blog seed post     # seed sample posts only
+```
+
 ## Build & Run
 
 ```bash
@@ -8,41 +18,79 @@ PORT=8080 DB_PATH=blog.db ./blog
 ```
 
 - Set `PORT` env (default `8080`), `DB_PATH` env (default `blog.db`)
+- Migrations and seeding are separate CLI commands — no longer auto-run on server start
 - AI-powered post generator: set `AI_ENABLED=true` and configure `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`, `AI_INTERVAL` (e.g. `1h`, `30m`)
 - No code generation
 
 ## Architecture
 
 ```
-main.go
-  internal/handler/ssr.go   → chi HTTP handlers + Go templates
-  internal/service/post.go  → markdown rendering (goldmark) + summaries
-  internal/store/sqlite.go   → Bun ORM queries over SQLite
-  internal/model/*.go        → Bun-annotated structs (Post, Category, Tag, PostTag)
+main.go                     → entry point, command dispatch
+app.go                      → embed directives, openDB, runMigrations, swagger annotations
+migrate.go                  → migrate command
+seed.go                     → seed commands (cmdSeed, seedAdminUser, seedSamplePosts)
+server.go                   → web server command (routes, middleware, AI generator)
+docs/docs.go                → generated swagger docs (swag init)
+
+internal/
+  model/
+    post.go                 → Post struct (Bun-annotated)
+    category.go             → Category struct
+    tag.go                  → Tag struct
+    post_tag.go             → PostTag join struct
+    user.go                 → User struct
+    session.go              → Session struct (opaque token sessions)
+  store/
+    sqlite.go               → Store struct + all DB methods (Bun ORM over SQLite)
+  service/
+    post.go                 → PostService (markdown rendering + summaries)
+    auth.go                 → AuthService (bcrypt hash, token generation, login/logout)
+    aiclient.go             → AI HTTP client (OpenAI-compatible API)
+    generator.go            → AI post generator
+  handler/
+    ssr.go                  → SSR page handlers + public API endpoints
+    auth.go                 → Auth handlers (login/logout/me) + auth middleware
+  version/
+    version.go              → version info
 ```
 
 - Module name: `blog` (short, not a full URL path)
 - All resources embedded at build time via `//go:embed`:
   - `templates/*` → parsed as `html/template`
   - `static/*` → served at `/static/`
-  - `migrations/*.sql` → auto-applied by goose on startup
+  - `migrations/*.sql` → run via `./blog migrate`
 - SQLite uses these PRAGMAs on every start: WAL, busy_timeout=5000, synchronous=NORMAL, cache_size=-2000, foreign_keys=ON
-- Seed data auto-populates on fresh databases (when post count == 0)
+- Seed data auto-populates fresh databases (idempotent: skips if data already exists)
 
 ## Routes
 
-| Path | Handler |
-|------|--------|
-| `/` | Home — all posts |
-| `/posts/{slug}` | Single post |
-| `/categories/{slug}` | Posts by category |
-| `/tags/{slug}` | Posts by tag |
-| `/static/*` | Embedded static files |
+| Path | Handler | Auth |
+|------|---------|------|
+| `/` | Home — all posts | No |
+| `/posts/{slug}` | Single post | No |
+| `/categories/{slug}` | Redirect to `/?category=` | No |
+| `/tags/{slug}` | Redirect to `/?tags=` | No |
+| `/static/*` | Embedded static files | No |
+| `/swagger/*` | Swagger UI | No |
+| `/api/posts` | JSON posts (paginated) | No |
+| `/api/categories` | JSON category search | No |
+| `/api/tags` | JSON tag search | No |
+| `/api/admin/login` | Login | No |
+| `/api/admin/me` | Current user info | Yes (Bearer) |
+| `/api/admin/logout` | Invalidate session | Yes (Bearer) |
+
+## Auth
+
+- Opaque bearer tokens stored in `sessions` table (multi-device support)
+- Passwords hashed with bcrypt
+- Default admin: `admin` / `admin123` (seeded via `./blog seed user`)
+- Swagger docs available at `/swagger/index.html`
+- Generate/regen swagger docs: `swag init -g app.go -d ./`
 
 ## Migrations
 
 - Stored in `migrations/*.sql` with goose `-- +goose Up` / `-- +goose Down` annotations
-- Run automatically on startup via `goose.NewProvider`
+- Run via `./blog migrate` command
 - To add a migration: create a new numbered SQL file in `migrations/`
 
 ## Testing & Linting
@@ -63,4 +111,4 @@ main.go
 type: description
 ```
 
-Types used: `feat`, `fix`, `chore`, `ci`
+Types used: `feat`, `fix`, `chore`, `ci`, `refactor`
