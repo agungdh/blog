@@ -73,6 +73,10 @@ func (s *PostService) GetPostBySlug(ctx context.Context, slug string) (*model.Po
 	return s.store.GetPostBySlug(ctx, slug)
 }
 
+func (s *PostService) GetLatestPosts(ctx context.Context, limit int) ([]model.Post, error) {
+	return s.store.GetLatestPosts(ctx, limit)
+}
+
 func (s *PostService) RenderMarkdown(input string) (string, error) {
 	var buf bytes.Buffer
 	if err := s.md.Convert([]byte(input), &buf); err != nil {

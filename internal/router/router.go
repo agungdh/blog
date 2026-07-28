@@ -31,6 +31,7 @@ func New(deps Deps) http.Handler {
 	r.Handle("/static/*", deps.Static)
 
 	r.Get("/", deps.SSR.Home)
+	r.Get("/rss.xml", deps.SSR.RSS)
 	r.Get("/posts/{slug}", deps.SSR.Post)
 	r.Get("/categories/{slug}", deps.SSR.Category)
 	r.Get("/tags/{slug}", deps.SSR.Tag)
