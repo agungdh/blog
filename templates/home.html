@@ -98,9 +98,12 @@
              data-cat-slug="{{if .SelectedCategory}}{{.SelectedCategory.Slug}}{{end}}">
             <label class="label is-size-7 has-text-weight-semibold" style="text-transform:uppercase;letter-spacing:0.05em">Category</label>
             <div class="control is-relative">
-                <input type="hidden" name="category" :value="slug">
+                <input type="hidden" name="category" :value="slug"
+                       value="{{if .SelectedCategory}}{{.SelectedCategory.Slug}}{{end}}">
                 <input class="input is-small" type="text" placeholder="Search categories..."
-                       :value="query" @input.debounce.300ms="query=$event.target.value;fetch()"
+                       value="{{if .SelectedCategory}}{{.SelectedCategory.Name}}{{end}}"
+                       :value="query" x-init="query = $el.value"
+                       @input.debounce.300ms="query=$event.target.value;fetch()"
                        @focus="results.length > 0 && (show = true)"
                        @blur="blur" autocomplete="off">
                 <template x-if="show && results.length > 0">
