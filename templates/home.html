@@ -102,8 +102,7 @@
                        value="{{if .SelectedCategory}}{{.SelectedCategory.Slug}}{{end}}">
                 <input class="input is-small" type="text" placeholder="Search categories..."
                        value="{{if .SelectedCategory}}{{.SelectedCategory.Name}}{{end}}"
-                       :value="query" x-init="query = $el.value"
-                       @input.debounce.300ms="query=$event.target.value;fetch()"
+                       @input.debounce.300ms="fetch()"
                        @focus="results.length > 0 && (show = true)"
                        @blur="blur" autocomplete="off">
                 <template x-if="show && results.length > 0">
@@ -150,7 +149,7 @@
             </div>
             <div class="control is-relative">
                 <input class="input is-small" type="text" placeholder="Search tags..."
-                       :value="query" @input.debounce.300ms="query=$event.target.value;fetch()"
+                       @input.debounce.300ms="fetch()"
                        @focus="results.length > 0 && (show = true)"
                        @blur="blur" autocomplete="off">
                 <template x-if="show && results.length > 0">

@@ -1,22 +1,21 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('categorySearch', () => ({
-        query: '',
         slug: '',
         results: [],
         show: false,
+        get $input() { return this.$el.querySelector('input[type="text"]') },
         init() {
-            this.query = this.$el.dataset.catName || '';
             this.slug = this.$el.dataset.catSlug || '';
         },
         fetch() {
-            var q = this.query.trim();
+            var q = this.$input ? this.$input.value.trim() : '';
             if (!q) { this.results = []; this.show = false; return; }
             fetch('/api/categories?q=' + encodeURIComponent(q))
                 .then(r => r.json())
                 .then(data => { this.results = data || []; this.show = (data && data.length > 0); });
         },
         select(item) {
-            this.query = item.name;
+            if (this.$input) this.$input.value = item.name;
             this.slug = item.slug;
             this.results = [];
             this.show = false;
@@ -26,15 +25,15 @@ document.addEventListener('alpine:init', () => {
 
     Alpine.data('tagChips', () => ({
         tags: [],
-        query: '',
         results: [],
         show: false,
+        get $input() { return this.$el.querySelector('input[type="text"]') },
         init() {
             var el = document.getElementById('init-tags-data');
             try { this.tags = el ? JSON.parse(el.textContent) : []; } catch(e) { this.tags = []; }
         },
         fetch() {
-            var q = this.query.trim();
+            var q = this.$input ? this.$input.value.trim() : '';
             if (!q) { this.results = []; this.show = false; return; }
             fetch('/api/tags?q=' + encodeURIComponent(q))
                 .then(r => r.json())
@@ -42,7 +41,7 @@ document.addEventListener('alpine:init', () => {
         },
         add(item) {
             if (!this.tags.find(t => t.slug === item.slug)) this.tags.push(item);
-            this.query = '';
+            if (this.$input) this.$input.value = '';
             this.results = [];
             this.show = false;
         },
