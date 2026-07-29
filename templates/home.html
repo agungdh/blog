@@ -103,7 +103,7 @@
                        :value="query" @input.debounce.300ms="query=$event.target.value;fetch()"
                        @focus="results.length > 0 && (show = true)"
                        @blur="blur" autocomplete="off">
-                <div x-show="listOpen" @click.outside="show = false"
+                <div x-show="show && results.length > 0"
                      class="dropdown is-active is-block"
                      style="display:none;position:absolute;z-index:42;left:0;right:0;top:100%;">
                     <div class="dropdown-menu" style="width:100%">
@@ -149,7 +149,7 @@
                        :value="query" @input.debounce.300ms="query=$event.target.value;fetch()"
                        @focus="results.length > 0 && (show = true)"
                        @blur="blur" autocomplete="off">
-                <div x-show="listOpen" @click.outside="show = false"
+                <div x-show="show && results.length > 0"
                      class="dropdown is-active is-block"
                      style="display:none;position:absolute;z-index:42;left:0;right:0;top:100%;">
                     <div class="dropdown-menu" style="width:100%">

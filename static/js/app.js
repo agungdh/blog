@@ -4,7 +4,6 @@ document.addEventListener('alpine:init', () => {
         slug: '',
         results: [],
         show: false,
-        get listOpen() { return this.show && this.results.length > 0 },
         init() {
             this.query = this.$el.dataset.catName || '';
             this.slug = this.$el.dataset.catSlug || '';
@@ -30,7 +29,6 @@ document.addEventListener('alpine:init', () => {
         query: '',
         results: [],
         show: false,
-        get listOpen() { return this.show && this.results.length > 0 },
         init() {
             var el = document.getElementById('init-tags-data');
             try { this.tags = el ? JSON.parse(el.textContent) : []; } catch(e) { this.tags = []; }
