@@ -3,19 +3,19 @@ document.addEventListener('alpine:init', () => {
         slug: '',
         results: [],
         show: false,
-        get $input() { return this.$el.querySelector('input[type="text"]') },
         init() {
             this.slug = this.$el.dataset.catSlug || '';
         },
-        search() {
-            var q = this.$input ? this.$input.value.trim() : '';
+        search(val) {
+            var q = val.trim();
             if (!q) { this.results = []; this.show = false; return; }
             fetch('/api/categories?q=' + encodeURIComponent(q))
                 .then(r => r.json())
                 .then(data => { this.results = data || []; this.show = (data && data.length > 0); });
         },
         select(item) {
-            if (this.$input) this.$input.value = item.name;
+            var input = this.$el.querySelector('input[type="text"]');
+            if (input) input.value = item.name;
             this.slug = item.slug;
             this.results = [];
             this.show = false;
@@ -27,21 +27,21 @@ document.addEventListener('alpine:init', () => {
         tags: [],
         results: [],
         show: false,
-        get $input() { return this.$el.querySelector('input[type="text"]') },
         init() {
             var el = document.getElementById('init-tags-data');
             try { this.tags = el ? JSON.parse(el.textContent) : []; } catch(e) { this.tags = []; }
         },
-        search() {
-            var q = this.$input ? this.$input.value.trim() : '';
+        search(val) {
+            var q = val.trim();
             if (!q) { this.results = []; this.show = false; return; }
             fetch('/api/tags?q=' + encodeURIComponent(q))
                 .then(r => r.json())
                 .then(data => { this.results = data || []; this.show = (data && data.length > 0); });
         },
         add(item) {
+            var input = this.$el.querySelector('input[type="text"]');
+            if (input) input.value = '';
             if (!this.tags.find(t => t.slug === item.slug)) this.tags.push(item);
-            if (this.$input) this.$input.value = '';
             this.results = [];
             this.show = false;
         },
