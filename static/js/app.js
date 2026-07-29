@@ -1,32 +1,33 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('categorySearch', () => ({
-        search: '',
+        query: '',
         slug: '',
         results: [],
         show: false,
         get listOpen() { return this.show && this.results.length > 0 },
         init() {
-            this.search = this.$el.dataset.catName || '';
+            this.query = this.$el.dataset.catName || '';
             this.slug = this.$el.dataset.catSlug || '';
         },
         fetch() {
-            var q = this.search.trim();
+            var q = this.query.trim();
             if (!q) { this.results = []; this.show = false; return; }
             fetch('/api/categories?q=' + encodeURIComponent(q))
                 .then(r => r.json())
                 .then(data => { this.results = data || []; this.show = (data && data.length > 0); });
         },
         select(item) {
-            this.search = item.name;
+            this.query = item.name;
             this.slug = item.slug;
+            this.results = [];
             this.show = false;
         },
-        blur() { var self = this; setTimeout(() => { self.show = false }, 150); }
+        blur() { var self = this; setTimeout(() => { self.results = []; self.show = false; }, 150); }
     }));
 
     Alpine.data('tagChips', () => ({
         tags: [],
-        search: '',
+        query: '',
         results: [],
         show: false,
         get listOpen() { return this.show && this.results.length > 0 },
@@ -35,7 +36,7 @@ document.addEventListener('alpine:init', () => {
             try { this.tags = el ? JSON.parse(el.textContent) : []; } catch(e) { this.tags = []; }
         },
         fetch() {
-            var q = this.search.trim();
+            var q = this.query.trim();
             if (!q) { this.results = []; this.show = false; return; }
             fetch('/api/tags?q=' + encodeURIComponent(q))
                 .then(r => r.json())
@@ -43,11 +44,12 @@ document.addEventListener('alpine:init', () => {
         },
         add(item) {
             if (!this.tags.find(t => t.slug === item.slug)) this.tags.push(item);
-            this.search = '';
+            this.query = '';
+            this.results = [];
             this.show = false;
         },
         remove(index) { this.tags.splice(index, 1); },
-        blur() { var self = this; setTimeout(() => { self.show = false }, 150); }
+        blur() { var self = this; setTimeout(() => { self.results = []; self.show = false; }, 150); }
     }));
 
     Alpine.data('infiniteScroll', () => ({
