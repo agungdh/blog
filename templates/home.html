@@ -102,7 +102,7 @@
                        value="{{if .SelectedCategory}}{{.SelectedCategory.Slug}}{{end}}">
                 <input class="input is-small" type="text" placeholder="Search categories..."
                        value="{{if .SelectedCategory}}{{.SelectedCategory.Name}}{{end}}"
-                       @input.debounce.300ms="fetch()"
+                       @input.debounce.300ms="search()"
                        @focus="results.length > 0 && (show = true)"
                        @blur="blur" autocomplete="off">
                 <template x-if="show && results.length > 0">
@@ -149,7 +149,7 @@
             </div>
             <div class="control is-relative">
                 <input class="input is-small" type="text" placeholder="Search tags..."
-                       @input.debounce.300ms="fetch()"
+                       @input.debounce.300ms="search()"
                        @focus="results.length > 0 && (show = true)"
                        @blur="blur" autocomplete="off">
                 <template x-if="show && results.length > 0">

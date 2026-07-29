@@ -7,7 +7,7 @@ document.addEventListener('alpine:init', () => {
         init() {
             this.slug = this.$el.dataset.catSlug || '';
         },
-        fetch() {
+        search() {
             var q = this.$input ? this.$input.value.trim() : '';
             if (!q) { this.results = []; this.show = false; return; }
             fetch('/api/categories?q=' + encodeURIComponent(q))
@@ -32,7 +32,7 @@ document.addEventListener('alpine:init', () => {
             var el = document.getElementById('init-tags-data');
             try { this.tags = el ? JSON.parse(el.textContent) : []; } catch(e) { this.tags = []; }
         },
-        fetch() {
+        search() {
             var q = this.$input ? this.$input.value.trim() : '';
             if (!q) { this.results = []; this.show = false; return; }
             fetch('/api/tags?q=' + encodeURIComponent(q))
