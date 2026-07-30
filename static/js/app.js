@@ -99,7 +99,7 @@ function buildCard(p) {
         : '';
     var meta = '<div class="is-flex is-align-items-center mb-3" style="gap:0.5rem">'
         + cat
-        + '<time class="has-text-grey is-size-7" datetime="' + esc(p.date) + '">' + esc(p.date) + '</time>'
+        + '<time class="has-text-grey is-size-7 ml-auto" datetime="' + esc(p.date) + '" x-text="new Date($el.getAttribute(\'datetime\')).toLocaleDateString(navigator.language)">' + esc(p.date) + '</time>'
         + '</div>';
     var tags = '';
     if (p.tags && p.tags.length) {
