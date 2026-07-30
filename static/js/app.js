@@ -5,6 +5,8 @@ document.addEventListener('alpine:init', () => {
         show: false,
         init() {
             this.slug = this.$el.dataset.catSlug || '';
+            var name = this.$el.dataset.catName || '';
+            if (name && this.$refs.catInput) this.$refs.catInput.value = name;
         },
         search(val) {
             var q = val.trim();
@@ -14,8 +16,7 @@ document.addEventListener('alpine:init', () => {
                 .then(data => { this.results = data || []; this.show = (data && data.length > 0); });
         },
         select(item) {
-            var input = this.$el.querySelector('input[type="text"]');
-            if (input) input.value = item.name;
+            if (this.$refs.catInput) this.$refs.catInput.value = item.name;
             this.slug = item.slug;
             this.results = [];
             this.show = false;
@@ -39,8 +40,7 @@ document.addEventListener('alpine:init', () => {
                 .then(data => { this.results = data || []; this.show = (data && data.length > 0); });
         },
         add(item) {
-            var input = this.$el.querySelector('input[type="text"]');
-            if (input) input.value = '';
+            if (this.$refs.tagInput) this.$refs.tagInput.value = '';
             if (!this.tags.find(t => t.slug === item.slug)) this.tags.push(item);
             this.results = [];
             this.show = false;

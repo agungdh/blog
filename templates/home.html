@@ -93,6 +93,7 @@
                 <input type="hidden" name="category" :value="slug"
                        value="{{if .SelectedCategory}}{{.SelectedCategory.Slug}}{{end}}">
                 <input class="input is-small" type="text" placeholder="Search categories..."
+                       x-ref="catInput"
                        value="{{if .SelectedCategory}}{{.SelectedCategory.Name}}{{end}}"
                        @input.debounce.300ms="search($event.target.value)"
                        @focus="results.length > 0 && (show = true)"
@@ -140,6 +141,7 @@
             </div>
             <div class="control is-relative">
                 <input class="input is-small" type="text" placeholder="Search tags..."
+                       x-ref="tagInput"
                        @input.debounce.300ms="search($event.target.value)"
                        @focus="results.length > 0 && (show = true)"
                        @blur="blur" autocomplete="off">
