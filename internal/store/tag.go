@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"blog/internal/model"
+	"github.com/uptrace/bun"
 )
 
 func (s *Store) CreateTag(ctx context.Context, t *model.Tag) error {
@@ -34,7 +35,7 @@ func (s *Store) GetTagsBySlugs(ctx context.Context, slugs []string) ([]model.Tag
 		return nil, nil
 	}
 	var tags []model.Tag
-	err := s.db.NewSelect().Model(&tags).Where("slug IN (?)", slugs).Scan(ctx)
+	err := s.db.NewSelect().Model(&tags).Where("slug IN (?)", bun.In(slugs)).Scan(ctx)
 	return tags, err
 }
 

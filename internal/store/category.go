@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"blog/internal/model"
+	"github.com/uptrace/bun"
 )
 
 func (s *Store) CreateCategory(ctx context.Context, c *model.Category) error {
@@ -34,7 +35,7 @@ func (s *Store) GetCategoriesBySlugs(ctx context.Context, slugs []string) ([]mod
 		return nil, nil
 	}
 	var categories []model.Category
-	err := s.db.NewSelect().Model(&categories).Where("slug IN (?)", slugs).Scan(ctx)
+	err := s.db.NewSelect().Model(&categories).Where("slug IN (?)", bun.In(slugs)).Scan(ctx)
 	return categories, err
 }
 
