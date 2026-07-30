@@ -44,12 +44,6 @@ type generatedTag struct {
 func (g *PostGenerator) Generate(ctx context.Context) {
 	log.Printf("generator: starting post generation")
 
-	existing, err := g.store.GetAllPostTitles(ctx)
-	if err != nil {
-		log.Printf("generator: failed to get existing posts: %v", err)
-		return
-	}
-
 	systemPrompt := `You are a professional tech blogger. Generate engaging, informative blog posts about programming, software development, DevOps, AI, cloud computing, cybersecurity, mobile development, or other technology topics.
 Write in markdown format with proper headings, code blocks, and formatting.
 Respond ONLY with a valid JSON object, no other text.
@@ -69,12 +63,6 @@ Respond ONLY with a valid JSON object, no other text.
 	userPrompt += "- Slug must be in English, lowercase, use hyphens, no special characters\n"
 	userPrompt += "- Content must be at least 500 words with code examples\n"
 	userPrompt += "- Include at least 2 relevant tags\n"
-	userPrompt += "\n"
-	userPrompt += "IMPORTANT: Generate a post on a COMPLETELY DIFFERENT topic from these existing posts:\n"
-	for _, t := range existing {
-		userPrompt += "- " + t + "\n"
-	}
-
 	raw, err := g.ai.Generate(systemPrompt, userPrompt)
 	if err != nil {
 		log.Printf("generator: ai call failed: %v", err)
