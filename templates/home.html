@@ -97,7 +97,7 @@
                        value="{{if .SelectedCategory}}{{.SelectedCategory.Name}}{{end}}"
                        @input.debounce.300ms="search($event.target.value)"
                        @focus="results.length > 0 && (show = true)"
-                       @blur="blur" autocomplete="off">
+                       @blur="blur" @keydown.enter.prevent autocomplete="off">
                 <template x-if="show && results.length > 0">
                     <div class="dropdown is-active is-block"
                          style="position:absolute;z-index:42;left:0;right:0;top:100%;">
@@ -144,7 +144,7 @@
                        x-model="query"
                        @input.debounce.300ms="search($event.target.value)"
                        @focus="results.length > 0 && (show = true)"
-                       @blur="blur" autocomplete="off">
+                       @blur="blur" @keydown.enter.prevent autocomplete="off">
                 <template x-if="show && results.length > 0">
                     <div class="dropdown is-active is-block"
                          style="position:absolute;z-index:42;left:0;right:0;top:100%;">
