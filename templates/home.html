@@ -94,6 +94,7 @@
                        value="{{if .SelectedCategory}}{{.SelectedCategory.Slug}}{{end}}">
                 <input class="input is-small" type="text" placeholder="Search categories..."
                        x-model="query"
+                       value="{{if .SelectedCategory}}{{.SelectedCategory.Name}}{{end}}"
                        @input.debounce.300ms="search($event.target.value)"
                        @focus="results.length > 0 && (show = true)"
                        @blur="blur" autocomplete="off">

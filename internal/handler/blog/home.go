@@ -31,12 +31,23 @@ func (h *SSRHandler) Home(w http.ResponseWriter, r *http.Request) {
 		cats, _ := h.svc.GetCategoriesBySlugs(r.Context(), []string{filter.Category})
 		if len(cats) > 0 {
 			selectedCategory = &cats[0]
+		} else {
+			selectedCategory = &model.Category{Name: filter.Category, Slug: filter.Category}
 		}
 	}
 
 	var selectedTags []model.Tag
 	if len(filter.Tags) > 0 {
 		selectedTags, _ = h.svc.GetTagsBySlugs(r.Context(), filter.Tags)
+		found := make(map[string]bool, len(selectedTags))
+		for _, t := range selectedTags {
+			found[t.Slug] = true
+		}
+		for _, s := range filter.Tags {
+			if !found[s] {
+				selectedTags = append(selectedTags, model.Tag{Name: s, Slug: s})
+			}
+		}
 	}
 
 	selectedTagsJSON, _ := json.Marshal(selectedTags)
