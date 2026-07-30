@@ -2,6 +2,7 @@ package blog
 
 import (
 	"encoding/json"
+	"html/template"
 	"log"
 	"net/http"
 	"time"
@@ -64,7 +65,7 @@ func (h *SSRHandler) Home(w http.ResponseWriter, r *http.Request) {
 		"FilterParams":     filterQueryParams(filter),
 		"SelectedCategory": selectedCategory,
 		"SelectedTags":     selectedTags,
-		"SelectedTagsJSON": string(selectedTagsJSON),
+		"SelectedTagsJSON": template.JS(string(selectedTagsJSON)),
 		"Year":             time.Now().Year(),
 		"AssetHashes":      h.AssetHashes,
 	}
