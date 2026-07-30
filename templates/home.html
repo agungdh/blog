@@ -27,12 +27,13 @@
 {{range .Posts}}
 <div class="card mb-5">
     <div class="card-content">
-        <div class="is-flex is-align-items-center mb-3" style="gap:0.5rem">
-            {{if .Category}}
-            <a class="tag is-link is-light is-small" href="/?category={{.Category.Slug}}">{{.Category.Name}}</a>
-            {{end}}
-            <time class="has-text-grey is-size-7" datetime="{{.Date}}">{{.Date}}</time>
-        </div>
+            <div class="is-flex is-align-items-center mb-3" style="gap:0.5rem">
+                {{if .Category}}
+                <a class="tag is-link is-light is-small" href="/?category={{.Category.Slug}}">{{.Category.Name}}</a>
+                {{end}}
+                <time class="has-text-grey is-size-7 ml-auto" datetime="{{.Date}}"
+                      x-text="new Date($el.getAttribute('datetime')).toLocaleDateString()">{{.Date}}</time>
+            </div>
         <h2 class="title is-4 mb-2">
             <a href="/posts/{{.Slug}}">{{.Title}}</a>
         </h2>
