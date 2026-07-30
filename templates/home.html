@@ -8,20 +8,10 @@
 
 <div x-data="{ filterOpen: {{if .Filter.HasFilter}}true{{else}}false{{end}} }">
 
-{{if not .PageHeader}}
-{{if not .Filter.HasFilter}}
 <div class="hero-blog">
     <h1 class="title">My Blog</h1>
     <p class="subtitle">Thoughts, stories, and ideas.</p>
 </div>
-{{end}}
-{{end}}
-
-{{if .PageHeader}}
-<div class="hero-blog">
-    <h1 class="title">{{.PageHeader}}</h1>
-</div>
-{{end}}
 
 <div class="columns">
 <div class="column is-three-fifths">
@@ -95,7 +85,6 @@
             </div>
         </div>
 
-        {{if not .PageHeader}}
         <div class="field" x-data="categorySearch"
              data-cat-name="{{if .SelectedCategory}}{{.SelectedCategory.Name}}{{end}}"
              data-cat-slug="{{if .SelectedCategory}}{{.SelectedCategory.Slug}}{{end}}">
@@ -122,7 +111,6 @@
                 </template>
             </div>
         </div>
-        {{end}}
 
         <div class="field">
             <label class="label is-size-7 has-text-weight-semibold" style="text-transform:uppercase;letter-spacing:0.05em">Date range</label>
@@ -175,7 +163,7 @@
                 <button class="button is-primary is-small is-fullwidth" type="submit">Apply Filters</button>
             </div>
             <div class="control">
-                <a class="button is-small" href="{{if .PageHeader}}/{{else}}.{{end}}">Clear</a>
+                <a class="button is-small" href="/">Clear</a>
             </div>
         </div>
     </form>

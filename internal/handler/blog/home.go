@@ -44,23 +44,6 @@ func (h *SSRHandler) Home(w http.ResponseWriter, r *http.Request) {
 		selectedTagsJSON = []byte("[]")
 	}
 
-	var pageHeader string
-	if filter.Category != "" {
-		if selectedCategory != nil {
-			pageHeader = "Category: " + selectedCategory.Name
-		} else {
-			pageHeader = "Category: " + filter.Category
-		}
-	} else if len(filter.Tags) == 1 {
-		if len(selectedTags) == 1 {
-			pageHeader = "Tag: " + selectedTags[0].Name
-		} else {
-			pageHeader = "Tag: " + filter.Tags[0]
-		}
-	} else if len(filter.Tags) > 1 {
-		pageHeader = "Tags"
-	}
-
 	data := map[string]any{
 		"Title":            "My Blog",
 		"Posts":            paged.Posts,
@@ -71,7 +54,6 @@ func (h *SSRHandler) Home(w http.ResponseWriter, r *http.Request) {
 		"SelectedCategory": selectedCategory,
 		"SelectedTags":     selectedTags,
 		"SelectedTagsJSON": string(selectedTagsJSON),
-		"PageHeader":       pageHeader,
 		"Year":             time.Now().Year(),
 		"AssetHashes":      h.AssetHashes,
 	}
