@@ -45,11 +45,19 @@ func (h *SSRHandler) Home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pageHeader string
-	if selectedCategory != nil {
-		pageHeader = "Category: " + selectedCategory.Name
-	} else if len(selectedTags) == 1 {
-		pageHeader = "Tag: " + selectedTags[0].Name
-	} else if len(selectedTags) > 1 {
+	if filter.Category != "" {
+		if selectedCategory != nil {
+			pageHeader = "Category: " + selectedCategory.Name
+		} else {
+			pageHeader = "Category: " + filter.Category
+		}
+	} else if len(filter.Tags) == 1 {
+		if len(selectedTags) == 1 {
+			pageHeader = "Tag: " + selectedTags[0].Name
+		} else {
+			pageHeader = "Tag: " + filter.Tags[0]
+		}
+	} else if len(filter.Tags) > 1 {
 		pageHeader = "Tags"
 	}
 
