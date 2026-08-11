@@ -28,6 +28,10 @@ jobs:
             goos: windows
             binary: blog-windows-amd64.exe
           - os: ubuntu-latest
+            arch: arm64
+            goos: windows
+            binary: blog-windows-arm64.exe
+          - os: ubuntu-latest
             arch: amd64
             goos: darwin
             binary: blog-darwin-amd64
