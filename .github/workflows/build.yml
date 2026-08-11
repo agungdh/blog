@@ -19,6 +19,10 @@ jobs:
             arch: amd64
             goos: linux
             binary: blog-linux-amd64
+          - os: ubuntu-latest
+            arch: arm64
+            goos: linux
+            binary: blog-linux-arm64
 
     runs-on: ${{ matrix.os }}
 
