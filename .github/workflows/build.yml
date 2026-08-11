@@ -23,6 +23,18 @@ jobs:
             arch: arm64
             goos: linux
             binary: blog-linux-arm64
+          - os: ubuntu-latest
+            arch: amd64
+            goos: windows
+            binary: blog-windows-amd64.exe
+          - os: ubuntu-latest
+            arch: amd64
+            goos: darwin
+            binary: blog-darwin-amd64
+          - os: ubuntu-latest
+            arch: arm64
+            goos: darwin
+            binary: blog-darwin-arm64
 
     runs-on: ${{ matrix.os }}
 
@@ -85,6 +97,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          chmod +x dist/blog-linux-*/blog-linux-* || true
-          for f in $(find dist -type f -name 'blog-linux-*'); do chmod +x "$f"; done
-          gh release upload "${{ github.ref_name }}" $(find dist -type f -name 'blog-linux-*') --clobber
+          for f in $(find dist -type f -name 'blog-*'); do chmod +x "$f"; done
+          gh release upload "${{ github.ref_name }}" $(find dist -type f -name 'blog-*') --clobber
