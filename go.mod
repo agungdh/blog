@@ -3,7 +3,7 @@ module blog
 go 1.25.7
 
 require (
-	github.com/go-chi/chi/v5 v5.3.2
+	github.com/go-chi/chi/v5 v5.4.0
 	github.com/go-playground/validator/v10 v10.30.3
 	github.com/pressly/goose/v3 v3.27.3
 	github.com/swaggo/http-swagger v1.3.4
